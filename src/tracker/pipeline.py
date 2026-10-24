@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Iterator
 
 from . import analyze, db, deliver, render
-from .config import Settings
+from .config import Settings, email_problems
 
 log = logging.getLogger("tracker")
 
@@ -174,6 +174,11 @@ def digest_week(
             if not s.email.enabled:
                 log.info("email.enabled is false; not sending")
                 run["stats"]["note"] = "email disabled"
+            elif problems := email_problems(s.email):
+                note = "email settings incomplete: " + "; ".join(f"{p['loc'][-1]} {p['msg']}" for p in problems)
+                log.error("not sending: %s", note)
+                run["stats"]["note"] = note
+                run["status"] = "partial"
             else:
                 try:
                     deliver.send_digest(s, subject, path)

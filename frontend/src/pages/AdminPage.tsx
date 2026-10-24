@@ -32,6 +32,30 @@ export default function AdminPage() {
 
   const dirty = !!config && !!draft && JSON.stringify(config.values) !== JSON.stringify(draft);
 
+  // Validate as you type (and once on load), using the server's rules; nothing is saved.
+  useEffect(() => {
+    if (!draft) return;
+    let current = true;
+    const t = setTimeout(() => {
+      api.validateConfig(draft).then(
+        (r) => current && setErrors(r.errors),
+        () => undefined, // a failed check just leaves the last result; Save re-validates anyway
+      );
+    }, 350);
+    return () => {
+      current = false;
+      clearTimeout(t);
+    };
+  }, [draft]);
+
+  const jumpToFirstError = () => {
+    const e = errors[0];
+    if (!e) return;
+    const el = document.querySelector(`[data-section="${e.loc[0]}"] [data-field="${e.loc[1]}"]`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    el?.querySelector<HTMLElement>("input, select")?.focus({ preventScroll: true });
+  };
+
   const save = async () => {
     if (!draft) return;
     setSaving(true);
@@ -84,11 +108,17 @@ export default function AdminPage() {
       {config && draft && (
         <>
           <div className="sticky-actions">
-            <span className="muted small">{dirty ? "Unsaved changes" : "All changes saved"}</span>
-            <button className="btn" onClick={() => (setDraft(config.values), setErrors([]))} disabled={!dirty || saving}>
+            {errors.length > 0 ? (
+              <button className="link-button error-text" onClick={jumpToFirstError}>
+                {errors.length} problem{errors.length === 1 ? "" : "s"} to fix
+              </button>
+            ) : (
+              <span className="muted small">{dirty ? "Unsaved changes" : "All changes saved"}</span>
+            )}
+            <button className="btn" onClick={() => setDraft(config.values)} disabled={!dirty || saving}>
               Revert
             </button>
-            <button className="btn primary" onClick={save} disabled={!dirty || saving}>
+            <button className="btn primary" onClick={save} disabled={!dirty || saving || errors.length > 0}>
               {saving ? "Saving…" : "Save settings"}
             </button>
           </div>
@@ -295,6 +325,13 @@ function ScheduleCard({ toAddr, refreshKey }: { toAddr: string; refreshKey: unkn
           )}
         </dd>
       </dl>
+      {d.email_enabled && d.problems.length > 0 && (
+        <div className="banner warn">
+          <span>
+            Weekly email is on but can&rsquo;t send until these are fixed under Email below: {d.problems.join("; ")}.
+          </span>
+        </div>
+      )}
       {d.email_enabled && d.needs_password && (
         <div className="banner warn">
           SMTP_PASSWORD is not set in the server&rsquo;s environment, so scheduled emails will fail. Set it and restart
@@ -308,7 +345,7 @@ function ScheduleCard({ toAddr, refreshKey }: { toAddr: string; refreshKey: unkn
         <button
           className="btn"
           onClick={sendNow}
-          disabled={!d.email_enabled || d.needs_password}
+          disabled={!d.email_enabled || d.needs_password || d.problems.length > 0}
           title={d.email_enabled ? "Send now, e.g. to test your email settings" : "Enable email first"}
         >
           Send last week&rsquo;s digest now

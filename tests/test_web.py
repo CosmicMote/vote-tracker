@@ -265,3 +265,33 @@ def test_job_runner_skips_cancelled_jobs(app_env):
     release.set()
     wait_idle(state)
     assert ran == ["second"]
+
+
+def test_live_validation_reports_field_errors_without_saving(app_env):
+    client, state, cfg, _ = app_env
+    before = cfg.read_text()
+    values = client.get("/api/config").json()["values"]
+    values["digest"]["top_n"] = "ten"  # typed letters into a number field
+    values["schedule"]["digest_at"] = "7pm"
+    values["email"]["enabled"] = True  # with the placeholder host and addresses
+    r = client.post("/api/config/validate", json={"values": values}, headers=HEADERS)
+    assert r.status_code == 200
+    errors = {tuple(e["loc"]): e["msg"] for e in r.json()["errors"]}
+    assert ("digest", "top_n") in errors and "integer" in errors[("digest", "top_n")]
+    assert ("email", "smtp_host") in errors  # readiness problems are reported alongside, not later
+    assert errors[("schedule", "digest_at")].startswith("use 24-hour HH:MM")  # no "Value error," prefix
+    assert cfg.read_text() == before  # nothing saved
+    values["digest"]["top_n"], values["schedule"]["digest_at"] = 10, "07:35"
+    r = client.post("/api/config/validate", json={"values": values}, headers=HEADERS).json()["errors"]
+    assert {tuple(e["loc"]) for e in r} == {("email", "smtp_host"), ("email", "from_addr"), ("email", "to_addr")}
+    assert client.put("/api/config", json={"values": values}, headers=HEADERS).status_code == 422
+    values["email"]["enabled"] = False  # unchecking Enabled makes it saveable again
+    assert client.post("/api/config/validate", json={"values": values}, headers=HEADERS).json()["errors"] == []
+
+
+def test_send_refused_while_email_settings_incomplete(app_env):
+    client, state, *_ = app_env
+    state.settings.email.enabled = True
+    state.settings.secrets.smtp_password = "pw"
+    r = client.post("/api/digest/2025-11-10/send", headers=HEADERS)
+    assert r.status_code == 409 and "smtp_host" in r.json()["detail"]

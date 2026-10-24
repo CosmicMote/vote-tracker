@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Callable
 from zoneinfo import ZoneInfo
 
 from .. import analyze, db, pipeline
-from ..config import WEEKDAYS, Settings
+from ..config import WEEKDAYS, Settings, email_problems
 from ..render import fmt_date
 
 if TYPE_CHECKING:
@@ -133,6 +133,8 @@ class Scheduler:
         slot = _utc(slot_local)
         if slot < since or _cursor(conn, DIGEST_KEY) == slot:
             return False
+        if email_problems(s.email):
+            return False  # not ready; the Admin tab says why, and the slot is tried again once fixed
         period = digest_period(slot_local, s.digest.timezone)
         db.set_sync(conn, DIGEST_KEY, slot)
         conn.commit()
@@ -178,6 +180,7 @@ class Scheduler:
                 "next": fmt(nxt_digest),
                 "covers": fmt_date(digest_period(nxt_digest, s.digest.timezone).start),
                 "needs_password": not s.secrets.smtp_password,
+                "problems": [f"{p['loc'][-1]}: {p['msg']}" for p in email_problems(s.email)],
                 "last_sent": last_sent,
             },
         }

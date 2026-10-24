@@ -55,7 +55,8 @@ def sched(app_env, monkeypatch):  # noqa: F811
 
 
 def enable_email(state):
-    state.settings.email.enabled = True
+    e = state.settings.email
+    e.enabled, e.smtp_host, e.from_addr, e.to_addr = True, "smtp.mail.test", "tracker@mail.test", "jeff@mail.test"
     state.settings.secrets.smtp_password = "pw"
 
 
@@ -141,7 +142,8 @@ def test_run_weekly_cli_does_not_resend(tmp_path, monkeypatch):
     from tracker.cli import app as cli_app
 
     cfg = write_config(tmp_path)
-    cfg.write_text(cfg.read_text() + "\n[email]\nenabled = true\n")
+    cfg.write_text(cfg.read_text() + '\n[email]\nenabled = true\nsmtp_host = "smtp.mail.test"\n'
+                   'from_addr = "tracker@mail.test"\nto_addr = "jeff@mail.test"\n')
     monkeypatch.setenv("SMTP_PASSWORD", "pw")
     sent = []
     monkeypatch.setattr("tracker.deliver.send_digest", lambda s, subject, path: sent.append(subject))
@@ -163,3 +165,15 @@ def test_run_weekly_cli_does_not_resend(tmp_path, monkeypatch):
     forced = runner.invoke(cli_app, ["-c", str(cfg), "run-weekly", "--force"])
     assert forced.exit_code == 0
     assert len(sent) == 2
+
+
+def test_incomplete_email_settings_hold_the_send_until_fixed(sched):
+    scheduler, clock, state, sent = sched
+    enable_email(state)
+    scheduler.tick()  # Wednesday: enabled
+    state.settings.email.smtp_host = "smtp.example.com"  # placeholder
+    clock.now = at(2026, 10, 31, 7, 35)
+    assert scheduler.tick() == []  # not ready: nothing sent, slot not used up
+    state.settings.email.smtp_host = "smtp.mail.test"
+    clock.now = at(2026, 10, 31, 9, 0)
+    assert scheduler.tick() == ["weekly"]  # fixed the same morning: the slot goes out

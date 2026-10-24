@@ -54,6 +54,8 @@ export const api = {
   saveMembers: (tracked: string[]) => request<MembersResponse>("PUT", "/api/members", { tracked }),
   config: () => request<ConfigResponse>("GET", "/api/config"),
   saveConfig: (values: ConfigValues) => request<ConfigResponse>("PUT", "/api/config", { values }),
+  validateConfig: (values: ConfigValues) =>
+    request<{ errors: FieldError[] }>("POST", "/api/config/validate", { values }),
   jobs: () => request<JobsResponse>("GET", "/api/jobs"),
   startJob: (kind: string, extra: Record<string, unknown> = {}) => request<Job>("POST", "/api/jobs", { kind, ...extra }),
 };

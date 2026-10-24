@@ -112,7 +112,9 @@ Start the server from a shell where `CONGRESS_GOV_API_KEY` (and, if needed, `ANT
 - **Data:** vote counts, a staleness warning when a chamber's last ingest failed, and buttons for "Update data" (ingest + normalize), "Backfill from date", "Re-normalize" and "Fetch member list".
 - **Jobs:** this session's jobs with live status, and the `run_log` history.
 - **Secrets:** whether each one is set; values are never shown.
-- **Settings:** every `config.toml` setting, generated from the pydantic models, with each field's description as help text. Saving validates first and shows errors next to the field. Only lines whose values changed are rewritten, so your comments and layout survive, and the previous file is kept as `config.toml.bak`.
+- **Settings:** every `config.toml` setting, generated from the pydantic models, with each field's description as help text. The page checks your changes against the server's rules as you type (and once when it opens), shows each problem under its field, and keeps Save disabled until they are fixed; "N problems to fix" jumps to the first one. Two kinds of rule apply:
+  - **Startup rules** are things the program can't run with: types, ranges, `HH:MM` times, the time zone, blank or non-`http(s)` URLs.
+  - **Readiness rules** cover whether email can actually send. With email enabled, it needs a real SMTP host and real From/To addresses (the `example.com` placeholders don't count), and addresses must look like addresses. These block saving and stop any send with a clear reason. They don't stop a config file from loading, so a half-finished `[email]` section never locks you out of the app; it is logged as a warning instead. Only lines whose values changed are rewritten, so your comments and layout survive, and the previous file is kept as `config.toml.bak`.
 
 ### Scheduled updates and the weekly email
 
@@ -146,7 +148,7 @@ So turning on Email → Enabled is all it takes to start getting the digest ever
 | `GET /api/digest/{week}/email` | The email HTML for that week |
 | `POST /api/digest/{week}/summarize`, `POST /api/digest/{week}/send` | Background jobs (send records the week as sent) |
 | `GET /api/legislators`, `GET` and `PUT /api/members` | Current members of Congress; the tracked selection |
-| `GET` and `PUT /api/config` | All settings, their JSON Schema, and which secrets are set |
+| `GET` and `PUT /api/config`, `POST /api/config/validate` | All settings, their JSON Schema, and which secrets are set; check settings without saving |
 | `GET` and `POST /api/jobs`, `GET /api/status` | Jobs and run history; data status |
 
 **Safety without a login.** Two guards stop other websites open in your browser from driving the app:

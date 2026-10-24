@@ -25,7 +25,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .. import analyze, db, pipeline
 from ..analyze import last_name
-from ..config import MembersConfig, Settings, load_settings
+from ..config import EmailConfig, MembersConfig, Settings, email_problems, load_settings
 from ..config_store import save_settings
 from ..logs import configure_logging
 from ..render import DigestBuilder, fmt_date, render_digest
@@ -133,7 +133,13 @@ def secrets_status(s: Settings) -> dict[str, bool]:
 
 
 def validation_detail(e: ValidationError) -> list[dict]:
-    return [{"loc": [str(x) for x in err["loc"]], "msg": err["msg"]} for err in e.errors()]
+    """pydantic errors as [{"loc", "msg"}], with field paths that match the settings form."""
+    out = []
+    for err in e.errors():
+        msg = err["msg"].removeprefix("Value error, ")
+        loc = [str(x) for x in err["loc"] if not str(x).startswith("function-")]
+        out.append({"loc": loc, "msg": msg})
+    return out
 
 
 # --- jobs ---------------------------------------------------------------------------
@@ -341,6 +347,9 @@ def create_app(
         period = parse_week(s, week)
         if not s.email.enabled:
             raise HTTPException(409, "Email is disabled. Enable it on the Admin tab first.")
+        if problems := email_problems(s.email):
+            raise HTTPException(409, "Email settings are incomplete: " + "; ".join(
+                f"{p['loc'][-1]} {p['msg']}" for p in problems))
         if not s.secrets.smtp_password:
             raise HTTPException(409, "SMTP_PASSWORD is not set in the server's environment.")
         def send(conn: sqlite3.Connection, st: Settings) -> dict:
@@ -435,21 +444,40 @@ def create_app(
     def get_config() -> dict:
         return config_payload()
 
+    def check_values(values: dict) -> tuple[Settings | None, list[dict]]:
+        """Everything that must hold before settings are saved: the config model's own rules,
+        email readiness, and tracked members that resolve to current members of Congress."""
+        try:
+            new = Settings.model_validate(values)
+        except ValidationError as e:
+            errors = validation_detail(e)
+            try:  # still report email readiness, so every problem shows at once
+                errors += email_problems(EmailConfig.model_validate(values.get("email") or {}))
+            except ValidationError:
+                pass  # the email section's own errors are already listed
+            return None, errors
+        errors = email_problems(new.email)
+        if new.members.tracked != state.settings.members.tracked:
+            with closing(state.conn()) as conn:
+                xw = state.current_crosswalk(conn)
+                for b in new.members.tracked:
+                    try:
+                        xw.resolve(b)
+                    except CrosswalkError as e:
+                        errors.append({"loc": ["members", "tracked"], "msg": str(e)})
+        return new, errors
+
+    @app.post("/api/config/validate")
+    def validate_config(body: ConfigIn) -> dict:
+        """Check settings without saving them; the Admin tab calls this as you type."""
+        return {"errors": check_values(body.values)[1]}
+
     @app.put("/api/config")
     def put_config(body: ConfigIn) -> dict:
         old = state.settings
-        try:
-            new = Settings.model_validate(body.values)
-        except ValidationError as e:
-            raise HTTPException(422, validation_detail(e)) from None
-        if new.members.tracked != old.members.tracked:
-            with closing(state.conn()) as conn:
-                xw = state.current_crosswalk(conn)
-                try:
-                    for b in new.members.tracked:
-                        xw.resolve(b)
-                except CrosswalkError as e:
-                    raise HTTPException(422, [{"loc": ["members", "tracked"], "msg": str(e)}]) from None
+        new, errors = check_values(body.values)
+        if errors or new is None:
+            raise HTTPException(422, errors)
         job = save_and_apply(new, old)
         return {**config_payload(), "job": job.as_dict() if job else None}
 

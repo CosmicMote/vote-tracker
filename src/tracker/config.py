@@ -2,15 +2,43 @@
 
 from __future__ import annotations
 
+import logging
 import os
+import re
 import tomllib
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import AfterValidator, BaseModel, Field, field_validator
 
 DEFAULT_CONFIG_PATH = Path("config.toml")
+
+
+def _not_blank(v: str) -> str:
+    v = v.strip()
+    if not v:
+        raise ValueError("can't be blank")
+    return v
+
+
+def _url(v: str) -> str:
+    v = _not_blank(v)
+    if not v.startswith(("http://", "https://")):
+        raise ValueError("must start with http:// or https://")
+    return v
+
+
+def _optional_url(v: str) -> str:
+    return _url(v) if v.strip() else ""
+
+
+NonBlank = Annotated[str, AfterValidator(_not_blank)]
+Url = Annotated[str, AfterValidator(_url)]
+OptionalUrl = Annotated[str, AfterValidator(_optional_url)]
+
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+_HOST_RE = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$")
 
 DEFAULT_BASE_WEIGHTS: dict[str, float] = {
     "veto_override": 1.2,
@@ -62,7 +90,7 @@ class CongressConfig(BaseModel):
 class HttpConfig(BaseModel):
     """How the tracker talks to Congress.gov, senate.gov and GitHub."""
 
-    user_agent: str = Field(
+    user_agent: NonBlank = Field(
         "vote-tracker/0.1 (personal use; you@example.com)",
         description="Sent with every request. Include a contact address.",
     )
@@ -81,7 +109,7 @@ class SenateConfig(BaseModel):
             "senate_gov: senate.gov's official XML, which blocks many scripted clients."
         ),
     )
-    voteview_url: str = Field(
+    voteview_url: Url = Field(
         "https://voteview.com/static/data/out", description="Voteview data root (rollcalls/, votes/, members/)."
     )
 
@@ -90,10 +118,10 @@ class LlmConfig(BaseModel):
     """Bill summaries. Secrets (ANTHROPIC_API_KEY) come from the environment."""
 
     provider: Literal["ollama", "anthropic"] = Field("ollama", description="Which summary provider to use.")
-    model: str = Field("llama3.1:8b", description='Model name, e.g. "llama3.1:latest" or "claude-opus-5-5".')
-    base_url: str = Field("http://localhost:11434", description="Ollama only: server URL.")
+    model: NonBlank = Field("llama3.1:8b", description='Model name, e.g. "llama3.1:latest" or "claude-opus-5-5".')
+    base_url: Url = Field("http://localhost:11434", description="Ollama only: server URL.")
     max_input_chars: int = Field(24000, ge=1000, description="Cap on bill text sent when no CRS summary exists.")
-    prompt_version: str = Field("v1", description="Bump to regenerate summaries lazily.")
+    prompt_version: NonBlank = Field("v1", description="Bump to regenerate summaries lazily.")
     effort: Literal["low", "medium", "high", "xhigh", "max"] = Field(
         "low", description="Anthropic only: output_config.effort."
     )
@@ -124,11 +152,21 @@ class EmailConfig(BaseModel):
     enabled: bool = Field(
         False, description="Email last week's digest on the [schedule] day and time while `tracker serve` runs."
     )
-    smtp_host: str = Field("smtp.example.com", description="SMTP server.")
+    smtp_host: str = Field("smtp.example.com", description="SMTP server, e.g. smtp.gmail.com.")
     smtp_port: int = Field(587, ge=1, le=65535, description="SMTP port (STARTTLS).")
     smtp_user: str | None = Field(None, description="Login name; defaults to the From address.")
     from_addr: str = Field("tracker@example.com", description="From address.")
     to_addr: str = Field("me@example.com", description="Recipient.")
+
+    @field_validator("smtp_host", "from_addr", "to_addr")
+    @classmethod
+    def _strip(cls, v: str) -> str:
+        return v.strip()
+
+    @field_validator("smtp_user")
+    @classmethod
+    def _user(cls, v: str | None) -> str | None:
+        return (v.strip() or None) if v else None
 
 
 WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
@@ -197,11 +235,11 @@ class StorageConfig(BaseModel):
 
     db_path: Path = Field(Path("./tracker.db"), description="SQLite database file.")
     log_dir: Path = Field(Path("./logs"), description="Directory for tracker.log.")
-    crosswalk_url: str = Field(
+    crosswalk_url: Url = Field(
         "https://unitedstates.github.io/congress-legislators/legislators-current.json",
         description="congress-legislators current members (JSON).",
     )
-    crosswalk_historical_url: str = Field(
+    crosswalk_historical_url: OptionalUrl = Field(
         "https://unitedstates.github.io/congress-legislators/legislators-historical.json",
         description='Former members, used only to map votes cast before someone left office. "" disables.',
     )
@@ -242,6 +280,38 @@ class Settings(BaseModel):
         return [f"{self.congress.number}-1", f"{self.congress.number}-2"]
 
 
+def email_problems(email: EmailConfig) -> list[dict]:
+    """Why the email settings can't send, as [{"loc": [...], "msg": ...}]. Empty means ready.
+
+    These rules block saving in the web app and stop a send with a clear reason, but never stop
+    a config from loading: a half-finished [email] section must not lock you out of the app.
+    """
+    out: list[dict] = []
+
+    def problem(field: str, msg: str) -> None:
+        out.append({"loc": ["email", field], "msg": msg})
+
+    host = email.smtp_host
+    if host and not _HOST_RE.match(host):
+        problem("smtp_host", "must be a host name such as smtp.gmail.com (no scheme, port or spaces)")
+    for field in ("from_addr", "to_addr"):
+        value = getattr(email, field)
+        if value and not _EMAIL_RE.match(value):
+            problem(field, "must be an email address like name@domain.com")
+    if email.enabled:
+        if not host:
+            problem("smtp_host", "required when email is enabled")
+        elif host.endswith("example.com"):
+            problem("smtp_host", f"{host} is a placeholder; enter your SMTP server")
+        for field in ("from_addr", "to_addr"):
+            value = getattr(email, field)
+            if not value:
+                problem(field, "required when email is enabled")
+            elif value.endswith("@example.com"):
+                problem(field, f"{value} is a placeholder; enter a real address")
+    return out
+
+
 def load_settings(path: Path | None = None) -> Settings:
     path = path or Path(os.environ.get("TRACKER_CONFIG", DEFAULT_CONFIG_PATH))
     if not path.exists():
@@ -253,4 +323,6 @@ def load_settings(path: Path | None = None) -> Settings:
     data.pop("secrets", None)  # secrets come only from the environment
     settings = Settings.model_validate(data)
     settings.secrets = Secrets.from_env()
+    for p in email_problems(settings.email):
+        logging.getLogger(__name__).warning("config %s: %s.%s %s", path, *p["loc"], p["msg"])
     return settings

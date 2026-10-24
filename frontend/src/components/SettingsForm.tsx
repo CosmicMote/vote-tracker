@@ -44,9 +44,11 @@ function NumberInput({ value, integer, onChange }: { value: unknown; integer: bo
       inputMode={integer ? "numeric" : "decimal"}
       value={text}
       onChange={(e) => {
-        setText(e.target.value);
-        const n = Number(e.target.value);
-        if (e.target.value.trim() !== "" && Number.isFinite(n)) onChange(integer ? Math.trunc(n) : n);
+        const raw = e.target.value;
+        setText(raw);
+        // Send what was typed when it isn't a number, so the server's validation reports it.
+        const n = Number(raw);
+        onChange(raw.trim() !== "" && Number.isFinite(n) ? n : raw);
       }}
     />
   );
@@ -133,7 +135,7 @@ function Field({ name, schema, value, error, onChange }: FieldProps) {
     );
   }
   return (
-    <div className={error ? "field has-error" : "field"}>
+    <div className={error ? "field has-error" : "field"} data-field={name}>
       <label className="field-label">
         {humanize(name)} <span className="mono muted small">{name}</span>
       </label>
@@ -154,13 +156,16 @@ interface Props {
 export default function SettingsForm({ schema, values, errors, onChange }: Props) {
   const sections = Object.entries(schema.properties ?? {}).filter(([k]) => k !== "secrets");
   const errorFor = (section: string, key: string) =>
-    errors.find((e) => e.loc[0] === section && e.loc[1] === key)?.msg;
+    errors
+      .filter((e) => e.loc[0] === section && e.loc[1] === key)
+      .map((e) => e.msg)
+      .join("; ") || undefined;
   return (
     <div className="settings">
       {sections.map(([section, raw]) => {
         const s = resolve(raw, schema);
         return (
-          <fieldset className="card settings-section" key={section}>
+          <fieldset className="card settings-section" key={section} data-section={section}>
             <legend>
               <h2>
                 {SECTION_TITLES[section] ?? humanize(section)} <span className="mono muted small">[{section}]</span>

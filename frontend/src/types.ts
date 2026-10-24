@@ -163,6 +163,7 @@ export interface Schedule {
     next: string;
     covers: string;
     needs_password: boolean;
+    problems: string[];
     last_sent: { week: string; to: string; at: string } | null;
   };
 }
