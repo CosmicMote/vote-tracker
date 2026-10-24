@@ -19,7 +19,6 @@ export default function DigestPage({ week }: { week?: string }) {
   const [weeks, setWeeks] = useState<WeeksResponse | null>(null);
   const [data, setData] = useState<DigestResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -57,7 +56,6 @@ export default function DigestPage({ week }: { week?: string }) {
   );
 
   useEffect(() => {
-    setNotice(null);
     load();
   }, [load]);
 
@@ -68,17 +66,6 @@ export default function DigestPage({ week }: { week?: string }) {
     const t = setTimeout(() => load(true), POLL_MS);
     return () => clearTimeout(t);
   }, [job, data, load]);
-
-  const onSend = async () => {
-    if (!selected || !data) return;
-    if (!window.confirm(`Email the digest for ${data.week.label}?`)) return;
-    try {
-      const j = await api.send(selected);
-      setNotice(`${j.label}: queued. Progress is on the Admin tab.`);
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  };
 
   const onSummarize = async () => {
     if (!selected) return;
@@ -101,22 +88,10 @@ export default function DigestPage({ week }: { week?: string }) {
         </div>
         <div className="toolbar-actions">
           <WeekPicker weeks={weeks.weeks} value={selected!} onChange={(w) => navigate({ page: "digest", week: w })} />
-          <a className="btn" href={selected ? api.emailUrl(selected) : "#"} target="_blank" rel="noreferrer">
-            Email version
-          </a>
-          <button
-            className="btn primary"
-            onClick={onSend}
-            disabled={!data?.email_enabled}
-            title={data?.email_enabled ? "Send this digest by email" : "Enable email on the Admin tab"}
-          >
-            Send email
-          </button>
         </div>
       </div>
 
       {error && <div className="banner error">{error}</div>}
-      {notice && <div className="banner info">{notice}</div>}
       {data && <SummaryStatus data={data} onRetry={onSummarize} />}
       {loading && !data && <p className="muted">Analyzing week…</p>}
       {data && (

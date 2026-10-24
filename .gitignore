@@ -12,3 +12,5 @@ config.toml.tmp
 frontend/node_modules/
 # Built UI (npm --prefix frontend run build)
 src/tracker/web/static/
+# Secrets for cron (see README)
+.env

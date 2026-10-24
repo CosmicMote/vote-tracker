@@ -105,7 +105,6 @@ export interface DigestResponse {
   digest: Digest;
   reanalyzed: boolean;
   summaries: { pending: number; job: Job | null; waiting_for: string | null };
-  email_enabled: boolean;
 }
 
 export interface Legislator {
@@ -152,6 +151,20 @@ export interface Status {
   has_crosswalk: boolean;
   busy: boolean;
   weeks: { first: string; last: string };
+  schedule: Schedule;
+}
+
+export interface Schedule {
+  running: boolean;
+  update: { next: string; needs_key: boolean } | null;
+  digest: {
+    email_enabled: boolean;
+    when: string;
+    next: string;
+    covers: string;
+    needs_password: boolean;
+    last_sent: { week: string; to: string; at: string } | null;
+  };
 }
 
 // A small subset of JSON Schema, as produced by pydantic's model_json_schema().

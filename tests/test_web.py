@@ -58,7 +58,7 @@ def app_env(tmp_path, monkeypatch):
 
     run_normalize(conn, load_settings(cfg))
     conn.close()
-    app = create_app(cfg, allowed_hosts=["testserver"])
+    app = create_app(cfg, allowed_hosts=["testserver"], start_scheduler=False)
     with TestClient(app) as client:
         yield client, app.state.tracker, cfg, tmp_path
 

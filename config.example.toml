@@ -47,6 +47,12 @@ smtp_port = 587
 from_addr = "tracker@example.com"
 to_addr = "me@example.com"
 
+[schedule]
+# Run by `tracker serve` (the web app) while it is running, in the [digest] time zone.
+update_daily_at = "02:15"      # fetch new data and normalize daily; "" turns it off
+digest_weekday = "saturday"    # email last week's digest on this day...
+digest_at = "07:35"            # ...at this time, when [email] enabled = true
+
 [storage]
 db_path = "./tracker.db"
 log_dir = "./logs"

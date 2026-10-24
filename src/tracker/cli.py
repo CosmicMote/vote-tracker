@@ -130,6 +130,8 @@ def report_digest(s: Settings, run: dict) -> None:
     typer.echo(f"wrote {run['stats']['path']}")
     if run["stats"]["sent"]:
         typer.echo(f"sent to {s.email.to_addr}")
+    elif note := run["stats"].get("note"):
+        typer.echo(f"not sent: {note}")
 
 
 @app.command()
@@ -144,25 +146,16 @@ def digest(
 
 
 @app.command("run-weekly")
-def run_weekly() -> None:
-    """All stages for the last full week, then send."""
+def run_weekly(
+    force: bool = typer.Option(False, "--force", help="Send even if this week's digest was already emailed."),
+) -> None:
+    """All stages for the last full week, then send (once per week unless --force)."""
     s = settings()
     conn = open_db(s)
     period = analyze.last_full_week(s.digest.timezone)
     log.info("weekly run for %s..%s", period.start, period.end)
-    try:
-        pipeline.ingest(conn, s, verbose=State.verbose)
-    except pipeline.StageFailed:
-        log.error("ingest failed; continuing with the data already stored")
     with cli_stage():
-        pipeline.normalize(conn, s, verbose=State.verbose)
-        pipeline.analyze_week(conn, s, period, State.verbose)
-    try:
-        pipeline.summarize_week(conn, s, period, State.verbose)
-    except pipeline.StageFailed:
-        log.error("summarize failed; the digest will use fallback summaries")
-    with cli_stage():
-        report_digest(s, pipeline.digest_week(conn, s, period, True, State.verbose))
+        report_digest(s, pipeline.weekly_digest(conn, s, period, force, State.verbose))
 
 
 @app.command()

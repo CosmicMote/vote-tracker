@@ -69,7 +69,7 @@ For summaries, either run [Ollama](https://ollama.com) locally (`ollama pull lla
 | `tracker analyze [--week YYYY-MM-DD]` | Stage 3 for the week containing the date. The default is the last full Monday–Sunday week |
 | `tracker summarize [--week …]` | Stage 4: LLM summaries for the bills that made that week's digest |
 | `tracker digest [--week …] [--send]` | Stages 5 and 6: render the HTML, then email it if `--send` is given and `[email].enabled` is true |
-| `tracker run-weekly` | All stages for the last full week, then send |
+| `tracker run-weekly [--force]` | All stages for the last full week, then send. A week already emailed is not sent again unless `--force` |
 | `tracker members` | Show tracked members as resolved: chamber, state, district, Bioguide and LIS IDs, party, caucus |
 | `tracker explain-vote <chamber> <session> <roll>` | Print one vote's classification, threshold, caucus positions and per-member score, for tuning. Session is `119-1`, or just `1` |
 | `tracker serve [--host 127.0.0.1] [--port 8000]` | Run the [web app](#web-app) |
@@ -78,12 +78,14 @@ Global options are `-c/--config PATH` (default `./config.toml`, or `$TRACKER_CON
 
 Every command writes a `run_log` row with per-source counts. A command exits non-zero only when a whole stage fails, not when a single record or one chamber's source does.
 
-**Scheduling.** Run ingest and normalize nightly, and the digest on Saturday morning, once both chambers' week is done:
+**Scheduling.** If you run the web app, it does the scheduling itself; see [Scheduled updates and the weekly email](#scheduled-updates-and-the-weekly-email). Without the web app, use cron. Cron runs with a bare `PATH` and without your shell profile, so use the full path to `uv` and load your secrets from a file only you can read:
 
 ```cron
-15 2 * * *   cd /path/to/political-tracker && uv run tracker ingest && uv run tracker normalize
-35 7 * * 6   cd /path/to/political-tracker && uv run tracker run-weekly
+15 2 * * *   cd /path/to/political-tracker && . ./.env && /opt/homebrew/bin/uv run tracker ingest && /opt/homebrew/bin/uv run tracker normalize
+35 7 * * 6   cd /path/to/political-tracker && . ./.env && /opt/homebrew/bin/uv run tracker run-weekly
 ```
+
+Here `.env` holds `export CONGRESS_GOV_API_KEY=…` and `export SMTP_PASSWORD=…` lines (`chmod 600 .env`). Running cron alongside the web app's schedule won't email a week twice, because every send is recorded and `run-weekly` checks that record.
 
 Logs go to stdout and to a rotating file at `logs/tracker.log`. The Congress.gov key is never logged: it is stripped from every stored URL and from error messages, and httpx's own request logging, which would include it, is silenced.
 
@@ -101,15 +103,33 @@ uv run tracker serve                 # http://127.0.0.1:8000
 
 Start the server from a shell where `CONGRESS_GOV_API_KEY` (and, if needed, `ANTHROPIC_API_KEY` and `SMTP_PASSWORD`) are exported. Secrets are read from the environment at startup and are never shown in the UI or written to `config.toml`.
 
-**Digest tab.** Pick any week from the one containing 2025-01-03, the start of the 119th Congress, up to last week (the default). Arrows step one week at a time, and each week has its own URL (`#/digest/2026-09-14`). Opening a week that hasn't been analyzed runs analyze right away (it is fast and deterministic), so votes show up at once. Bill summaries are then written by a background job and fill in as they finish; until then the page shows the CRS excerpt. Background jobs run one at a time, so the week you're viewing gets priority: when you open a week, summary jobs for other weeks that haven't started yet are cancelled, and are queued again if you go back to those weeks. A summary job that is already running always finishes. While a week's job waits, the page says what it is waiting behind. A mid-week date in the URL is rewritten to that week's Monday. A week is re-analyzed only when something changed: new data, different members, or different scoring settings. "Email version" opens the exact HTML the email would contain, and "Send email" mails it when email is enabled.
+**Digest tab.** Pick any week from the one containing 2025-01-03, the start of the 119th Congress, up to last week (the default). Arrows step one week at a time, and each week has its own URL (`#/digest/2026-09-14`). Opening a week that hasn't been analyzed runs analyze right away (it is fast and deterministic), so votes show up at once. Bill summaries are then written by a background job and fill in as they finish; until then the page shows the CRS excerpt. Background jobs run one at a time, so the week you're viewing gets priority: when you open a week, summary jobs for other weeks that haven't started yet are cancelled, and are queued again if you go back to those weeks. A summary job that is already running always finishes. While a week's job waits, the page says what it is waiting behind. A mid-week date in the URL is rewritten to that week's Monday. A week is re-analyzed only when something changed: new data, different members, or different scoring settings.
 
 **Members tab.** Choose who the digest covers by state or by name search. The selection is saved to `[members].tracked` in `config.toml`, so you only choose once, and the CLI and cron use it too. Votes for every member are already stored. For a newly added member, saving starts a background job that fetches their introduced and cosponsored bills (this needs the API key). The order of the list matters in one place: delegation splits compare the first two senators.
 
 **Admin tab.**
+- **Schedule & email:** whether the weekly email is on, when the next one goes out and which week it covers, the last digest sent, and the next data update. It warns when a secret the schedule needs is missing. "Preview last week's email" opens the exact HTML the email would contain. "Send last week's digest now" is for testing your email settings; a week sent this way isn't sent again by the schedule.
 - **Data:** vote counts, a staleness warning when a chamber's last ingest failed, and buttons for "Update data" (ingest + normalize), "Backfill from date", "Re-normalize" and "Fetch member list".
 - **Jobs:** this session's jobs with live status, and the `run_log` history.
 - **Secrets:** whether each one is set; values are never shown.
 - **Settings:** every `config.toml` setting, generated from the pydantic models, with each field's description as help text. Saving validates first and shows errors next to the field. Only lines whose values changed are rewritten, so your comments and layout survive, and the previous file is kept as `config.toml.bak`.
+
+### Scheduled updates and the weekly email
+
+While `tracker serve` is running, it does on its own what the cron lines do, at times set in `[schedule]` (editable on the Admin tab) and in the `[digest].timezone` time zone:
+
+| Task | Default | Needs |
+| --- | --- | --- |
+| Data update (ingest + normalize) | Daily at 02:15 (`update_daily_at`; `""` turns it off) | `CONGRESS_GOV_API_KEY` |
+| Weekly digest email: update, analyze and summarize last week, then send | Saturday at 07:35 (`digest_weekday`, `digest_at`) | `[email] enabled = true`, SMTP settings, `SMTP_PASSWORD` |
+
+So turning on Email → Enabled is all it takes to start getting the digest every week. How it behaves:
+
+- **No surprise sends when you first enable email.** The first email goes out at the next scheduled time, not for a time that already passed.
+- **Catch-up.** If the computer was asleep or the server was stopped at the scheduled time, the most recent missed digest is sent when it comes back. Older missed weeks are not.
+- **Never twice.** Each emailed week is recorded in `sync_state` (`digest_sent:<week>`). The schedule, the Admin button and `tracker run-weekly` all check that record, so a cron job alongside the web app won't double-send. `run-weekly --force` re-sends.
+- **One attempt per scheduled time.** A failure (for example, a wrong SMTP password) shows on the Admin tab and in `logs/tracker.log` instead of retrying every 30 seconds. Fix the setting, then use "Send last week's digest now".
+- **Nothing runs while the server is stopped.** Keep `tracker serve` running (for example as a login item), or keep the cron lines above.
 
 **How it is put together.**
 - `src/tracker/pipeline.py` holds the stage functions. The CLI and the web app share them, so both write the same `run_log` rows.
@@ -124,7 +144,7 @@ Start the server from a shell where `CONGRESS_GOV_API_KEY` (and, if needed, `ANT
 | `GET /api/weeks` | Selectable weeks, newest first, and the default |
 | `GET /api/digest/{week}` | Analyze if stale, then return the digest as JSON, with summary progress |
 | `GET /api/digest/{week}/email` | The email HTML for that week |
-| `POST /api/digest/{week}/summarize`, `POST /api/digest/{week}/send` | Background jobs |
+| `POST /api/digest/{week}/summarize`, `POST /api/digest/{week}/send` | Background jobs (send records the week as sent) |
 | `GET /api/legislators`, `GET` and `PUT /api/members` | Current members of Congress; the tracked selection |
 | `GET` and `PUT /api/config` | All settings, their JSON Schema, and which secrets are set |
 | `GET` and `POST /api/jobs`, `GET /api/status` | Jobs and run history; data status |
@@ -310,7 +330,8 @@ Everything lives in `config.toml`; see [config.example.toml](config.example.toml
 | `[senate]` | `source` (`voteview` or `senate_gov`), `voteview_url` |
 | `[llm]` | `provider`, `model`, `base_url`, `max_input_chars`, `prompt_version`, `effort`, `fallbacks` |
 | `[digest]` | `top_n`, `missed_vote_min_score`, `output_dir`, `timezone` |
-| `[email]` | `enabled`, `smtp_host`, `smtp_port`, `smtp_user`, `from_addr`, `to_addr` |
+| `[email]` | `enabled` (turns on the weekly email), `smtp_host`, `smtp_port`, `smtp_user`, `from_addr`, `to_addr` |
+| `[schedule]` | `update_daily_at`, `digest_weekday`, `digest_at` (used by `tracker serve`) |
 | `[storage]` | `db_path`, `log_dir`, `crosswalk_url`, `crosswalk_historical_url`, `crosswalk_max_age_days`, `corrections_window_days` |
 | `[scoring]` | `party_break_bonus`, `sponsor_bonus`, `tie_breaker_bonus`, `break_min_cohesion`, `break_min_caucus_size`, `lopsided_share`, `contested_cohesion`, `[scoring.base_weights]`, `[scoring.topic_boost]` |
 
@@ -351,6 +372,7 @@ The suite runs fully offline: an autouse fixture fails any test that opens a soc
 | `test_render.py` | Snapshots of the digest HTML for a fixed fixture database (one representative, two senators): `tests/snapshots/digest_2025-11-10.html` (Senate votes on H.R. 5371, sponsorships) and `digest_2025-09-08.html` (a House rule vote) |
 | `test_deliver.py`, `test_cli.py` | STARTTLS delivery, delivery failure keeping the file, CLI stages and `run_log` rows |
 | `test_voteview.py` | Voteview against senate.gov on the same five votes (question, class, threshold, result, counts, bill, tie-breaker and all 100 senators' positions and caucuses agree); tie-breaker inference; the President's positions skipped; nomination numbers hidden; ingest downloading the three files and queuing bills; rejecting a non-CSV response |
+| `test_scheduler.py` | Slot times; enabling email waits for the next slot; one send per slot; a missed slot caught up once; a week already sent is skipped; disabling and re-enabling doesn't send retroactively; the daily update needs the API key; `run-weekly` doesn't re-send without `--force` |
 | `test_web.py` | The API through FastAPI's TestClient: week bounds (back to 2025-01-03), analyze-once-until-changed, summaries filled in by the background job, members saved to `config.toml` with comments intact, config validation errors per field, jobs, the client-header and Host guards |
 | `test_config_store.py` | A no-op save leaves the file byte-identical; a change rewrites only its own lines; resetting to a default removes the line; secrets are never written |
 
@@ -430,6 +452,7 @@ src/tracker/
   web/
     app.py                FastAPI app: JSON API, localhost guards, serves the built UI
     jobs.py               single-worker background job queue
+    scheduler.py          daily data update and weekly digest email while the server runs
     static/               built UI (generated by `npm --prefix frontend run build`, not committed)
 frontend/                 React + TypeScript UI (Vite)
   src/pages/              DigestPage, MembersPage, AdminPage

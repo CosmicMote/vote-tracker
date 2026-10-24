@@ -150,6 +150,19 @@ def summarize_week(conn: sqlite3.Connection, s: Settings, period: analyze.Period
         http.close()
 
 
+# --- sent digests: so a week is never emailed twice by accident --------------------------
+
+
+def sent_record(conn: sqlite3.Connection, period: analyze.Period) -> sqlite3.Row | None:
+    """sync_state row for an emailed week: cursor = recipient, last_run = when (UTC)."""
+    return db.get_sync(conn, f"digest_sent:{period.start.isoformat()}")
+
+
+def mark_sent(conn: sqlite3.Connection, period: analyze.Period, to_addr: str) -> None:
+    db.set_sync(conn, f"digest_sent:{period.start.isoformat()}", to_addr)
+    conn.commit()
+
+
 def digest_week(
     conn: sqlite3.Connection, s: Settings, period: analyze.Period, send: bool, verbose: bool = False
 ) -> dict:
@@ -164,6 +177,7 @@ def digest_week(
             else:
                 try:
                     deliver.send_digest(s, subject, path)
+                    mark_sent(conn, period, s.email.to_addr)
                     run["stats"]["sent"] = True
                 except deliver.DeliveryError as e:
                     log.error("delivery failed: %s", e)
@@ -210,3 +224,29 @@ def apply_tracked(conn: sqlite3.Connection, s: Settings) -> None:
     ctx = NormalizeContext(conn=conn, crosswalk=load_crosswalk(conn, s.congress.number), tracked=set(s.members.tracked))
     sync_tracked(ctx, s.members.tracked)
     conn.commit()
+
+
+def weekly_digest(
+    conn: sqlite3.Connection, s: Settings, period: analyze.Period, force: bool = False, verbose: bool = False
+) -> dict:
+    """Everything the weekly email needs: fresh data, analysis, summaries, then send.
+
+    A week already emailed is not sent again unless `force`; the digest file is still rewritten.
+    Fetching and summarizing failures are logged and the digest goes out with what is stored.
+    """
+    if sent := (None if force else sent_record(conn, period)):
+        log.info("digest for week of %s already sent to %s at %s; not sending again", period.start, sent["cursor"], sent["last_run"])
+        run = digest_week(conn, s, period, send=False, verbose=verbose)
+        run["stats"]["note"] = f"already sent at {sent['last_run']}"
+        return run
+    try:
+        ingest(conn, s, verbose=verbose)
+    except StageFailed:
+        log.error("ingest failed; continuing with the data already stored")
+    normalize(conn, s, verbose=verbose)
+    analyze_week(conn, s, period, verbose)
+    try:
+        summarize_week(conn, s, period, verbose)
+    except StageFailed:
+        log.error("summarize failed; the digest will use fallback summaries")
+    return digest_week(conn, s, period, send=True, verbose=verbose)

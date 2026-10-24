@@ -32,6 +32,7 @@ from ..render import DigestBuilder, fmt_date, render_digest
 from ..sources.legislators import Crosswalk, CrosswalkError, Person
 from ..summarize import pending_summaries
 from .jobs import Job, JobRunner
+from .scheduler import Scheduler
 
 STATIC_DIR = Path(__file__).parent / "static"
 CLIENT_HEADER = "x-tracker-client"
@@ -158,6 +159,11 @@ def submit_refresh_members(state: AppState, bioguides: list[str]) -> Job | None:
     )
 
 
+def update_job(since: date | None):
+    """Job function: ingest (optionally backfilling from `since`), then normalize."""
+    return lambda conn, s: _update(conn, s, since)
+
+
 def _update(conn: sqlite3.Connection, s: Settings, since: date | None) -> dict:
     try:
         run = pipeline.ingest(conn, s, since=since)
@@ -204,19 +210,29 @@ class JobIn(BaseModel):
 # --- app ------------------------------------------------------------------------------
 
 
-def create_app(config_path: Path | str | None = None, allowed_hosts: list[str] | None = None) -> FastAPI:
+def create_app(
+    config_path: Path | str | None = None,
+    allowed_hosts: list[str] | None = None,
+    start_scheduler: bool = True,
+) -> FastAPI:
     path = Path(config_path or os.environ.get("TRACKER_CONFIG", "config.toml")).resolve()
     hosts = allowed_hosts or [h for h in os.environ.get("TRACKER_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",") if h]
     state = AppState(path)
     configure_logging(state.settings)
 
+    scheduler = Scheduler(state)
+
     @asynccontextmanager
     async def lifespan(app: FastAPI):
+        if start_scheduler:
+            scheduler.start()
         yield
+        scheduler.stop()
         state.runner.shutdown()
 
     app = FastAPI(title="Legislator Vote Tracker", lifespan=lifespan)
     app.state.tracker = state
+    app.state.scheduler = scheduler
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=hosts)
 
     @app.middleware("http")
@@ -238,6 +254,7 @@ def create_app(config_path: Path | str | None = None, allowed_hosts: list[str] |
                 for r in conn.execute("SELECT chamber, COUNT(*) n, MAX(vote_date) latest FROM vote_event GROUP BY chamber")
             }
             has_crosswalk = db.get_raw(conn, "legislators", "legislators_current", "current") is not None
+            schedule = {**scheduler.describe(conn), "running": start_scheduler}
         return {
             "config_path": str(state.config_path),
             "db_path": str(s.storage.db_path),
@@ -250,6 +267,7 @@ def create_app(config_path: Path | str | None = None, allowed_hosts: list[str] |
             "has_crosswalk": has_crosswalk,
             "busy": not state.runner.idle(),
             "weeks": {"first": first.isoformat(), "last": last.isoformat()},
+            "schedule": schedule,
         }
 
     @app.get("/api/weeks")
@@ -300,7 +318,6 @@ def create_app(config_path: Path | str | None = None, allowed_hosts: list[str] |
                 "job": job.as_dict() if job else None,
                 "waiting_for": ahead.label if ahead else None,
             },
-            "email_enabled": s.email.enabled,
         }
 
     @app.get("/api/digest/{week}/email", response_class=HTMLResponse)
@@ -326,10 +343,15 @@ def create_app(config_path: Path | str | None = None, allowed_hosts: list[str] |
             raise HTTPException(409, "Email is disabled. Enable it on the Admin tab first.")
         if not s.secrets.smtp_password:
             raise HTTPException(409, "SMTP_PASSWORD is not set in the server's environment.")
+        def send(conn: sqlite3.Connection, st: Settings) -> dict:
+            with state.analyze_lock:
+                pipeline.analyze_if_stale(conn, st, period)
+            return pipeline.digest_week(conn, st, period, send=True)
+
         job = state.runner.submit(
             "send",
             f"Email digest for week of {fmt_date(period.start)} to {s.email.to_addr}",
-            lambda conn, st: pipeline.digest_week(conn, st, period, send=True),
+            send,
             key=f"send:{period.start.isoformat()}",
         )
         return job.as_dict()
@@ -458,7 +480,7 @@ def create_app(config_path: Path | str | None = None, allowed_hosts: list[str] |
         if body.kind == "update":
             job = state.runner.submit(
                 "update", "Fetch new data and normalize" + (f" (backfill from {since})" if since else ""),
-                lambda conn, st: _update(conn, st, since), key="update",
+                update_job(since), key="update",
             )
         elif body.kind == "ingest":
             job = state.runner.submit("ingest", "Fetch new data", lambda conn, st: pipeline.ingest(conn, st, since=since), key="update")

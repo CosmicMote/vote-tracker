@@ -22,6 +22,7 @@ const SECTION_TITLES: Record<string, string> = {
   llm: "Summaries (LLM)",
   digest: "Digest",
   email: "Email",
+  schedule: "Schedule",
   scoring: "Scoring",
   storage: "Storage",
 };

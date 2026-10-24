@@ -10,6 +10,8 @@ const SECRET_HELP: Record<string, string> = {
 };
 
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : "");
+// Vote dates only: Voteview publishes no times, so a time of day would be misleading.
+const day = (iso: string) => new Date(iso).toLocaleDateString();
 
 export default function AdminPage() {
   const [config, setConfig] = useState<ConfigResponse | null>(null);
@@ -58,6 +60,7 @@ export default function AdminPage() {
       </div>
       {message && <div className={`banner ${message.kind}`}>{message.text}</div>}
 
+      {config && <ScheduleCard toAddr={String(config.values.email?.to_addr ?? "")} refreshKey={config} />}
       <StatusAndJobs />
 
       {config && (
@@ -149,12 +152,12 @@ function StatusAndJobs() {
             <dt>House votes</dt>
             <dd>
               {status.votes.house?.votes ?? 0}
-              {status.votes.house && <span className="muted"> · latest {when(status.votes.house.latest)}</span>}
+              {status.votes.house && <span className="muted"> · latest {day(status.votes.house.latest)}</span>}
             </dd>
             <dt>Senate votes</dt>
             <dd>
               {status.votes.senate?.votes ?? 0}
-              {status.votes.senate && <span className="muted"> · latest {when(status.votes.senate.latest)}</span>}
+              {status.votes.senate && <span className="muted"> · latest {day(status.votes.senate.latest)}</span>}
             </dd>
             <dt>Summaries</dt>
             <dd>{status.provider}</dd>
@@ -234,6 +237,87 @@ function StatusAndJobs() {
           </table>
         </details>
       )}
+    </section>
+  );
+}
+
+function ScheduleCard({ toAddr, refreshKey }: { toAddr: string; refreshKey: unknown }) {
+  const [status, setStatus] = useState<Status | null>(null);
+  const [message, setMessage] = useState<{ kind: "info" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    api.status().then(setStatus, (e) => setMessage({ kind: "error", text: (e as Error).message }));
+  }, [refreshKey]); // re-read after settings are saved
+
+  if (!status) return null;
+  const { schedule, weeks } = status;
+  const d = schedule.digest;
+  const lastWeek = weeks.last;
+
+  const sendNow = async () => {
+    if (!window.confirm(`Email last week's digest to ${toAddr} now?`)) return;
+    try {
+      const job = await api.send(lastWeek);
+      setMessage({ kind: "info", text: `${job.label}: started. Its result appears under Data below.` });
+    } catch (e) {
+      setMessage({ kind: "error", text: (e as Error).message });
+    }
+  };
+
+  return (
+    <section className="card">
+      <h2>Schedule &amp; email</h2>
+      {message && <div className={`banner ${message.kind}`}>{message.text}</div>}
+      {!schedule.running && <div className="banner warn">The scheduler is not running in this process.</div>}
+      <dl className="facts">
+        <dt>Weekly email</dt>
+        <dd>
+          {d.email_enabled ? (
+            <>
+              On, {d.when}. Next: <strong>{d.next}</strong>, covering the week of {d.covers}, to {toAddr}
+            </>
+          ) : (
+            <>Off. Turn on Email → Enabled below to send last week&rsquo;s digest {d.when}.</>
+          )}
+        </dd>
+        <dt>Last sent</dt>
+        <dd>{d.last_sent ? `Week of ${d.last_sent.week}, to ${d.last_sent.to}, ${d.last_sent.at}` : "Never"}</dd>
+        <dt>Data updates</dt>
+        <dd>
+          {schedule.update ? (
+            schedule.update.needs_key ? (
+              <span className="error-text">Off: CONGRESS_GOV_API_KEY is not set in the server&rsquo;s environment.</span>
+            ) : (
+              <>Daily; next {schedule.update.next}</>
+            )
+          ) : (
+            "Off"
+          )}
+        </dd>
+      </dl>
+      {d.email_enabled && d.needs_password && (
+        <div className="banner warn">
+          SMTP_PASSWORD is not set in the server&rsquo;s environment, so scheduled emails will fail. Set it and restart
+          <code> tracker serve</code>.
+        </div>
+      )}
+      <div className="job-actions">
+        <a className="btn" href={api.emailUrl(lastWeek)} target="_blank" rel="noreferrer">
+          Preview last week&rsquo;s email
+        </a>
+        <button
+          className="btn"
+          onClick={sendNow}
+          disabled={!d.email_enabled || d.needs_password}
+          title={d.email_enabled ? "Send now, e.g. to test your email settings" : "Enable email first"}
+        >
+          Send last week&rsquo;s digest now
+        </button>
+      </div>
+      <p className="muted small">
+        Scheduled work runs only while <code>tracker serve</code> is running. A digest missed while the computer slept
+        is sent when it wakes; a week is never emailed twice.
+      </p>
     </section>
   );
 }

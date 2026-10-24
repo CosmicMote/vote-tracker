@@ -121,12 +121,52 @@ class DigestConfig(BaseModel):
 class EmailConfig(BaseModel):
     """Email delivery over SMTP with STARTTLS. SMTP_PASSWORD comes from the environment."""
 
-    enabled: bool = Field(False, description="Send the digest by email.")
+    enabled: bool = Field(
+        False, description="Email last week's digest on the [schedule] day and time while `tracker serve` runs."
+    )
     smtp_host: str = Field("smtp.example.com", description="SMTP server.")
     smtp_port: int = Field(587, ge=1, le=65535, description="SMTP port (STARTTLS).")
     smtp_user: str | None = Field(None, description="Login name; defaults to the From address.")
     from_addr: str = Field("tracker@example.com", description="From address.")
     to_addr: str = Field("me@example.com", description="Recipient.")
+
+
+WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+
+
+def _hhmm(v: str, allow_blank: bool) -> str:
+    v = v.strip()
+    if allow_blank and not v:
+        return v
+    try:
+        hh, mm = v.split(":")
+        if not (0 <= int(hh) <= 23 and 0 <= int(mm) <= 59 and len(mm) == 2):
+            raise ValueError
+    except ValueError:
+        raise ValueError(f"use 24-hour HH:MM, e.g. 07:35 (got {v!r})") from None
+    return f"{int(hh):02d}:{mm}"
+
+
+class ScheduleConfig(BaseModel):
+    """What `tracker serve` does on its own, in the digest time zone. Nothing runs while the server is stopped."""
+
+    update_daily_at: str = Field(
+        "02:15", description='Fetch new data and normalize every day at this time (24-hour HH:MM); "" turns it off.'
+    )
+    digest_weekday: Literal["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] = Field(
+        "saturday", description="Day to email last week's digest, when email is enabled."
+    )
+    digest_at: str = Field("07:35", description="Time to email the weekly digest (24-hour HH:MM).")
+
+    @field_validator("update_daily_at")
+    @classmethod
+    def _update_time(cls, v: str) -> str:
+        return _hhmm(v, allow_blank=True)
+
+    @field_validator("digest_at")
+    @classmethod
+    def _digest_time(cls, v: str) -> str:
+        return _hhmm(v, allow_blank=False)
 
 
 class ScoringConfig(BaseModel):
@@ -191,6 +231,7 @@ class Settings(BaseModel):
     llm: LlmConfig = Field(default_factory=LlmConfig)
     digest: DigestConfig = Field(default_factory=DigestConfig)
     email: EmailConfig = Field(default_factory=EmailConfig)
+    schedule: ScheduleConfig = Field(default_factory=ScheduleConfig)
     scoring: ScoringConfig = Field(default_factory=ScoringConfig)
     storage: StorageConfig = Field(default_factory=StorageConfig)
     secrets: Secrets = Field(default_factory=Secrets, exclude=True)
