@@ -6,6 +6,8 @@ single record is logged and skipped, and the run finishes as 'partial'.
 
 from __future__ import annotations
 
+import csv
+import io
 import json
 import logging
 import sqlite3
@@ -24,6 +26,7 @@ from .sources.congress_gov import CongressGovClient
 from .sources.http import HttpClient, HttpError
 from .sources.legislators import Crosswalk, Person, fetch_crosswalk
 from .sources.senate_xml import SenateClient
+from .sources.voteview import VoteviewClient
 
 log = logging.getLogger(__name__)
 
@@ -35,6 +38,7 @@ class Sources:
     http: HttpClient
     congress: CongressGovClient | None
     senate: SenateClient
+    voteview: VoteviewClient | None = None
 
     @classmethod
     def from_settings(cls, settings: Settings) -> "Sources":
@@ -45,7 +49,12 @@ class Sources:
             settings.http.max_attempts,
         )
         key = settings.secrets.congress_gov_api_key
-        return cls(http=http, congress=CongressGovClient(http, key) if key else None, senate=SenateClient(http))
+        return cls(
+            http=http,
+            congress=CongressGovClient(http, key) if key else None,
+            senate=SenateClient(http),
+            voteview=VoteviewClient(http, settings.senate.voteview_url),
+        )
 
 
 @dataclass
@@ -341,6 +350,46 @@ def ingest_senate(
         conn.commit()
 
 
+def ingest_senate_voteview(
+    conn: sqlite3.Connection,
+    vv: VoteviewClient,
+    settings: Settings,
+    result: IngestResult,
+    since: str | None,
+    cutoff: str,
+) -> None:
+    """Download the Congress's three Senate files whole; corrections arrive with every download.
+    Bills are queued for the same votes the senate.gov path would fetch: new, recent, or --since."""
+    congress = settings.congress.number
+    stats = result.stats["voteview"]
+    ext = f"S{congress}"
+    for kind in ("voteview_rollcalls", "voteview_votes", "voteview_members"):
+        f = vv.fetch(kind, congress)
+        if not f.text.lstrip().startswith("congress,"):
+            raise ValueError(f"{f.url} did not return a Voteview CSV")
+        stats["changed" if db.store_raw(conn, "voteview", kind, ext, f.text, f.url) else "unchanged"] += 1
+    conn.commit()
+
+    rollcalls = [r for r in csv.DictReader(io.StringIO(db.get_raw(conn, "voteview", "voteview_rollcalls", ext)["payload"]))
+                 if r["chamber"] == "Senate"]
+    for session_id in settings.sessions:
+        session = session_id.split("-")[1]
+        rows = {int(r["clerk_rollnumber"]): r for r in rollcalls if r["session"] == session}
+        if not rows:
+            continue
+        sync_key = f"voteview_votes:{session_id}"
+        sync = db.get_sync(conn, sync_key)
+        cursor = int(sync["cursor"]) if sync and sync["cursor"] else 0
+        items = [(roll, r["date"]) for roll, r in rows.items()]
+        targets = select_targets(items, cursor, since, cutoff, set(range(1, cursor + 1)))
+        for roll in targets:
+            ref = parse_bill_ref(rows[roll].get("bill_number") or "")
+            result.want_bill((str(congress), *ref) if ref else None, rows[roll]["date"] >= cutoff)
+        stats["new_votes"] += sum(1 for roll in rows if roll > cursor)
+        db.set_sync(conn, sync_key, str(max(rows)))
+    conn.commit()
+
+
 # --- Bills ------------------------------------------------------------------
 
 
@@ -420,6 +469,9 @@ def run_ingest(
                 if sources.congress is None:
                     raise RuntimeError("no Congress.gov API key")
                 ingest_house(conn, sources.congress, settings, result, since_s, cutoff)
+            elif settings.senate.source == "voteview":
+                assert sources.voteview is not None
+                ingest_senate_voteview(conn, sources.voteview, settings, result, since_s, cutoff)
             else:
                 ingest_senate(conn, sources.senate, settings, result, since_s, cutoff)
             record_chamber_health(conn, ch, ok=True)

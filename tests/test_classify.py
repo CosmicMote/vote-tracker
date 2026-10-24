@@ -51,7 +51,8 @@ def test_classification_and_threshold(chamber, question, is_rule, expected, maj,
     assert threshold(chamber, cls, maj) == thr
 
 
-def test_unknown_question_is_other_and_logged(caplog):
+def test_unknown_question_is_other_and_logged(caplog, monkeypatch):
+    monkeypatch.setattr("tracker.classify._warned", set())
     assert classify("senate", "On the Motion") == "other"
     assert "unclassified senate vote question" in caplog.text
 

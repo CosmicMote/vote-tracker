@@ -19,6 +19,9 @@ CONFIG = """\
 [members]
 tracked = ["D000197", "B001267", "H000273"]  # DeGette, Bennet, Hickenlooper
 
+[senate]
+source = "senate_gov"
+
 [digest]
 top_n = 10                     # scored votes per member
 output_dir = "{tmp}/digests"

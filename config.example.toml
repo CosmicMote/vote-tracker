@@ -18,6 +18,12 @@ min_interval_seconds = 1.0     # per host
 timeout_seconds = 30.0
 max_attempts = 5               # retries 429 and 5xx, honoring Retry-After
 
+[senate]
+# Where Senate roll-call votes come from:
+#   "voteview"   - Voteview's CSV files (https://voteview.com), reachable by scripts. Default.
+#   "senate_gov" - senate.gov's official XML, which blocks many scripted clients (403).
+source = "voteview"
+
 [llm]
 provider = "ollama"            # or "anthropic"
 model = "llama3.1:8b"          # for anthropic, e.g. "claude-opus-5-5"

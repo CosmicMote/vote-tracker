@@ -134,6 +134,9 @@
   <div style="margin-top:32px;padding-top:12px;border-top:1px solid #d1d5db;font-size:12px;line-height:1.5;{{ MUTED }}">
     <p style="margin:4px 0;">Bill summaries are written by a language model from the Congressional Research Service summary or, when none exists yet, the bill text (prompt {{ prompt_version }}); each summary is labeled with its source. Vote descriptions, counts and caucus comparisons are computed directly from the official records, not by the model.</p>
     <p style="margin:4px 0;">Only recorded roll-call votes are covered. Voice votes and unanimous consent leave no record of individual positions and are not included; in the Senate that covers many confirmations and much routine business.</p>
+    {% if senate_source == "voteview" %}
+    <p style="margin:4px 0;">Senate roll-call votes are from Voteview: Lewis, Poole, Rosenthal, Boche, Rudkin and Sonnet, <a href="https://voteview.com/" style="{{ LINK }}">Voteview: Congressional Roll-Call Votes Database</a>. Voteview publishes the date of each vote but not the time.</p>
+    {% endif %}
     <p style="margin:4px 0;">Data as of:{% for a in as_of %} {{ a.source }}, {{ a.at }}{% if not loop.last %};{% else %}.{% endif %}{% endfor %}</p>
   </div>
 </div>

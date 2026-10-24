@@ -10,7 +10,7 @@ from typing import Callable
 from .. import classify, db
 from ..config import Settings
 from ..sources.legislators import Crosswalk, CrosswalkError
-from . import bills, house, senate
+from . import bills, house, senate, voteview
 from .common import is_rule_title
 from .context import NormalizeContext
 
@@ -70,6 +70,23 @@ def _each(
     ctx.conn.commit()
 
 
+def normalize_voteview(ctx: NormalizeContext, settings: Settings, all_records: bool) -> None:
+    """The three Voteview files are parsed together whenever any of them changed."""
+    ext = f"S{settings.congress.number}"
+    rows = {k: db.get_raw(ctx.conn, "voteview", k, ext) for k in ("voteview_rollcalls", "voteview_votes", "voteview_members")}
+    if any(r is None for r in rows.values()):
+        return
+    if not all_records and all(r["normalized_hash"] == r["payload_hash"] for r in rows.values()):
+        return
+    written = voteview.normalize_files(
+        ctx, rows["voteview_rollcalls"]["payload"], rows["voteview_votes"]["payload"], rows["voteview_members"]["payload"]
+    )
+    for r in rows.values():
+        db.mark_normalized(ctx.conn, r)
+    ctx.conn.commit()
+    ctx.stats["voteview_ok"] += written
+
+
 def reclassify_house_resolutions(conn: sqlite3.Connection) -> int:
     """House votes on an H.Res. depend on whether it is a rule, which may be learned after the vote."""
     rows = conn.execute(
@@ -117,12 +134,16 @@ def run_normalize(conn: sqlite3.Connection, settings: Settings, all_records: boo
     house_rows = [db.get_raw(conn, "congress_gov", "house_vote", e) for e in sorted(house_ids)]
     _each(ctx, [r for r in house_rows if r is not None], "house_vote", do_house)
 
-    _each(
-        ctx,
-        pending("senate_xml", "senate_vote"),
-        "senate_vote",
-        lambda r: senate.normalize_vote(ctx, r["payload"], r["url"]),
-    )
+    # Senate: only the configured source, so stored data from the other source never flip-flops.
+    if settings.senate.source == "senate_gov":
+        _each(
+            ctx,
+            pending("senate_xml", "senate_vote"),
+            "senate_vote",
+            lambda r: senate.normalize_vote(ctx, r["payload"], r["url"]),
+        )
+    else:
+        normalize_voteview(ctx, settings, all_records)
 
     for kind, role in (("sponsored", "sponsor"), ("cosponsored", "cosponsor")):
         _each(

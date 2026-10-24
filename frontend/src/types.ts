@@ -82,6 +82,7 @@ export interface Digest {
   as_of: { source: string; at: string }[];
   stale: string[];
   prompt_version: string;
+  senate_source: "voteview" | "senate_gov";
 }
 
 export type JobStatus = "queued" | "running" | "ok" | "partial" | "failed" | "cancelled";

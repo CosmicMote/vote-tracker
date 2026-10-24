@@ -66,8 +66,13 @@ def classify(chamber: str, question: str, *, is_rule: bool = False) -> str:
             if rule.vote_class == HOUSE_RESOLUTION:
                 return "rule" if is_rule else "passage"
             return rule.vote_class
-    log.warning("unclassified %s vote question %r -> other", chamber, question)
+    if (chamber, q) not in _warned:
+        _warned.add((chamber, q))
+        log.warning("unclassified %s vote question %r -> other", chamber, question)
     return "other"
+
+
+_warned: set[tuple[str, str]] = set()  # each unknown question is logged once per process
 
 
 def parse_majority_requirement(value: str | None) -> float | None:

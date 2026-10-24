@@ -13,6 +13,8 @@ def write_config(tmp_path):
         f"""
 [members]
 tracked = ["D000197", "B001267", "H000273"]
+[senate]
+source = "senate_gov"
 [digest]
 output_dir = "{tmp_path / 'digests'}"
 [storage]

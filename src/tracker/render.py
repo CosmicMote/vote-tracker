@@ -197,7 +197,9 @@ class DigestBuilder:
             heading = bills[0]["plain_title"]
             number = " / ".join(b["number"] for b in bills)
         elif first["nomination_ref"]:
-            heading, number = nomination_description(first), first["nomination_ref"]
+            # Voteview drops the part suffix (PN11-7 becomes PN117), so its numbers are not shown.
+            ref = None if self.settings.senate.source == "voteview" else first["nomination_ref"]
+            heading, number = nomination_description(first), ref
         else:
             heading, number = first["vote_title"] or first["question"], None
         if bills and heading == bills[0]["number"]:
@@ -294,6 +296,7 @@ class DigestBuilder:
         labels = {
             "congress_gov": "Congress.gov (House votes, bills, members)",
             "senate_xml": "senate.gov (Senate votes)",
+            "voteview": "Voteview (Senate votes)",
             "legislators": "congress-legislators (ID crosswalk)",
         }
         rows = self.conn.execute(
@@ -335,6 +338,7 @@ class DigestBuilder:
             "as_of": self.as_of(),
             "stale": self.stale_warnings(),
             "prompt_version": self.settings.llm.prompt_version,
+            "senate_source": self.settings.senate.source,
         }
 
 

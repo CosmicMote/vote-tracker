@@ -28,7 +28,7 @@ This is the MVP (phase 1) of the spec in [Legislator Vote Tracker — MVP Spec.m
 
 ## Read this first: known blockers
 
-1. **senate.gov blocks scripted requests from this machine.** Every request to `www.senate.gov` from Python or curl returned `403 Forbidden` from Akamai's bot protection, even with a descriptive User-Agent. As the spec requires, the client does **not** try to get around this. When the block applies, Senate ingest fails cleanly: House data still updates, and the digest shows a "Senate data may be stale" banner. Test from the machine that will run the job. If it is blocked too, see [Open questions](#open-questions).
+1. **senate.gov blocks scripted requests, so Senate votes come from Voteview by default.** GET requests to `www.senate.gov` from scripts (Python, curl) get `403 Forbidden` from Akamai's bot protection; HEAD requests succeed, which can make a quick check look fine when it isn't. As the spec requires, the tracker does not try to get around the block. Instead, `[senate].source = "voteview"` (the default) reads the same roll calls from [Voteview](https://voteview.com)'s per-Congress CSV files, which scripts can download. The senate.gov XML client is still there (`source = "senate_gov"`) for when access is granted; see [Senate votes from Voteview](#senate-votes-from-voteview).
 2. **You need a Congress.gov API key.** Get a free key at <https://api.congress.gov/sign-up/> and export it as `CONGRESS_GOV_API_KEY`. The shared `DEMO_KEY` allows about 10 requests an hour, which is enough to record a few fixtures and nothing more. A backfill makes a few thousand requests: at the default 1 request per second it takes roughly an hour, well under the key's limit of about 5,000 requests an hour.
 
 ---
@@ -135,6 +135,23 @@ Start the server from a shell where `CONGRESS_GOV_API_KEY` (and, if needed, `ANT
 
 If you bind to another interface with `--host`, `tracker serve` warns you, because anyone who can reach that port can change settings and send email.
 
+## Senate votes from Voteview
+
+senate.gov's roll-call XML is the official source, but its bot protection blocks scripted downloads. By default (`[senate].source = "voteview"`), Senate votes come instead from [Voteview](https://voteview.com), UCLA's roll-call database, which publishes each Congress as three CSV files: roll calls, each member's position on each roll call, and members.
+
+- **Same data.** On the five votes recorded from both sources, everything the tracker uses matches: question text, vote class, threshold, result, counts, the bill, the tie-breaker, and all 100 senators' positions and caucus groupings. That's checked by `tests/test_voteview.py`.
+- **Simpler mapping.** Voteview gives each senator's Bioguide ID directly, so there is no LIS-ID lookup.
+- **Freshness.** Each ingest downloads the files whole (about 3 MB), so corrections come along automatically. When checked on 2026-10-24, the data ran through the Senate's latest vote (Sep 30, 2026). It is a research database, though, not an official feed, so new votes may appear later than on senate.gov.
+- **What's missing compared with senate.gov:**
+  - **Vote times.** Voteview publishes only the date, so votes are dated noon Eastern.
+  - **A tie-breaker field.** A 50–50 vote that carried can only have been decided by the Vice President voting yea, so that is recorded. A tied vote that failed records no tie-breaker.
+  - **Accurate nomination numbers.** They lose their dash (PN11-7 becomes PN117), so the digest doesn't show them; it shows the nominee description instead.
+  - **Amendment numbers.** Amendment votes still link to the bill they amend.
+- **Skipped rows.** Voteview also records the President's announced position on some roll calls. Those rows are skipped.
+- **Attribution.** The digest footer credits Voteview, as its terms ask: Lewis, Jeffrey B., Keith Poole, Howard Rosenthal, Adam Boche, Aaron Rudkin, and Luke Sonnet. *Voteview: Congressional Roll-Call Votes Database.*
+
+Links to roll calls still point to the official senate.gov pages, which open normally in a browser.
+
 ## How it works
 
 ```
@@ -153,7 +170,7 @@ Each stage is a CLI command and safe to re-run. Stages 1–3 are deterministic a
 - **Crosswalk.** Downloads [congress-legislators](https://github.com/unitedstates/congress-legislators) `legislators-current.json` when the stored copy is more than 7 days old, then resolves each tracked Bioguide ID to chamber, state, district and LIS ID. If any ID cannot be resolved, ingest stops with a clear error.
 - **Members.** Fetches each tracked member, plus their sponsored and cosponsored legislation.
 - **House votes.** Lists each session's votes from Congress.gov, then fetches detail and member positions for new votes, meaning those above the roll number stored in `sync_state`.
-- **Senate votes.** Fetches the session's vote menu XML from senate.gov, then each new vote file.
+- **Senate votes.** With `source = "voteview"` (the default), it downloads the Congress's three Senate CSV files (roll calls, positions, members), about 3 MB in total, and queues the bills referenced by new, recent or `--since` votes. With `source = "senate_gov"`, it fetches the session's vote menu XML from senate.gov, then each new vote file.
 - **Corrections.** In both chambers, re-fetches every vote from the last 14 days. A payload whose hash has not changed is not normalized again.
 - **Bills.** Fetches each bill referenced by a vote, by an amendment vote's target, by a House rule's title, or by a sponsorship, along with its CRS summaries. A bill is re-fetched when it is referenced by something recent, or when the stored copy is more than a week old. Bill text is fetched lazily in stage 4, and only for bills that have no CRS summary.
 
@@ -290,6 +307,7 @@ Everything lives in `config.toml`; see [config.example.toml](config.example.toml
 | `[members]` | `tracked`: Bioguide IDs |
 | `[congress]` | `number` (119) |
 | `[http]` | `user_agent` (include a contact address), `min_interval_seconds`, `timeout_seconds`, `max_attempts` |
+| `[senate]` | `source` (`voteview` or `senate_gov`), `voteview_url` |
 | `[llm]` | `provider`, `model`, `base_url`, `max_input_chars`, `prompt_version`, `effort`, `fallbacks` |
 | `[digest]` | `top_n`, `missed_vote_min_score`, `output_dir`, `timezone` |
 | `[email]` | `enabled`, `smtp_host`, `smtp_port`, `smtp_user`, `from_addr`, `to_addr` |
@@ -312,6 +330,7 @@ The suite runs fully offline: an autouse fixture fails any test that opens a soc
 | --- | --- |
 | `congress_gov/*.json` | Recorded from the live Congress.gov API, with the key removed: House vote list, vote detail and member positions (a rule's previous-question vote and an amendment vote), a rule H.Res., and CRS summaries |
 | `senate/*.xml` | A trimmed vote menu, plus five vote files: bill passage with a VP tie-breaker (H.R. 1, roll 372), cloture on a bill (617), an amendment (616), cloture on a nomination (659), and a nomination with a VP tie-breaker (Hegseth, roll 15). See the note below |
+| `voteview/*.csv` | Recorded Voteview files (no key needed), cut down to eight roll calls; kept lines are byte-for-byte as published. Five are the same votes as the senate.gov fixtures |
 | `legislators/*.json` | congress-legislators current and historical files, trimmed to the senators plus a few representatives, including the Speaker and a member who switched parties mid-term |
 | `congress_gov/unverified/*` | **Not recorded.** Shape-only fixtures with invented values (bills H.R. 9001–9003) for sponsored and cosponsored legislation, a bill's cosponsor list, and bill text. The shared `DEMO_KEY` ran out before these endpoints could be recorded. See the README in that folder, and replace them with recorded responses when you have a key |
 
@@ -331,6 +350,7 @@ The suite runs fully offline: an autouse fixture fails any test that opens a soc
 | `test_sponsorships.py` | Sponsored and cosponsored lists, cosponsorship dates from the bill's cosponsor list (fetched once per bill), and fetching bill text only when no CRS summary exists, latest version first |
 | `test_render.py` | Snapshots of the digest HTML for a fixed fixture database (one representative, two senators): `tests/snapshots/digest_2025-11-10.html` (Senate votes on H.R. 5371, sponsorships) and `digest_2025-09-08.html` (a House rule vote) |
 | `test_deliver.py`, `test_cli.py` | STARTTLS delivery, delivery failure keeping the file, CLI stages and `run_log` rows |
+| `test_voteview.py` | Voteview against senate.gov on the same five votes (question, class, threshold, result, counts, bill, tie-breaker and all 100 senators' positions and caucuses agree); tie-breaker inference; the President's positions skipped; nomination numbers hidden; ingest downloading the three files and queuing bills; rejecting a non-CSV response |
 | `test_web.py` | The API through FastAPI's TestClient: week bounds (back to 2025-01-03), analyze-once-until-changed, summaries filled in by the background job, members saved to `config.toml` with comments intact, config validation errors per field, jobs, the client-header and Host guards |
 | `test_config_store.py` | A no-op save leaves the file byte-identical; a change rewrites only its own lines; resetting to a default removes the line; secrets are never written |
 
@@ -342,7 +362,7 @@ To update the render snapshot after an intended change, run `UPDATE_SNAPSHOTS=1 
 
 The schema in `src/tracker/schema.sql` matches the spec, including the nullable columns phase 2 will need (`openstates_id`, `jurisdiction`). There is one addition: `raw_record.normalized_hash`, which stores the payload hash at the last successful normalize. It is how "skip re-normalizing unchanged payloads" works across runs.
 
-`raw_record` kinds are `legislators_current`, `legislators_historical`, `member`, `sponsored`, `cosponsored`, `house_vote_list`, `house_vote`, `house_vote_members`, `amendment`, `bill`, `bill_summaries`, `bill_text`, `bill_text_version`, `senate_vote_menu` and `senate_vote`.
+`raw_record` kinds are `legislators_current`, `legislators_historical`, `member`, `sponsored`, `cosponsored`, `house_vote_list`, `house_vote`, `house_vote_members`, `amendment`, `bill`, `bill_summaries`, `bill_text`, `bill_text_version`, `senate_vote_menu`, `senate_vote`, and (source `voteview`) `voteview_rollcalls`, `voteview_votes` and `voteview_members`.
 
 `sync_state` holds per-session vote cursors (`house_votes:119-1`, `senate_votes:119-2`, …) and per-chamber ingest health (`ingest_attempt:senate`, `ingest_ok:senate`), which the digest reads to warn about stale data.
 
@@ -364,7 +384,7 @@ The schema in `src/tracker/schema.sql` matches the spec, including the nullable 
 
 ## Open questions
 
-- **senate.gov access.** Scripted requests from this machine get `403` from Akamai. Before relying on the Senate half of the digest, check from the machine that will run the job: `curl -sI -A "vote-tracker/0.1 (you@example.com)" https://www.senate.gov/legislative/LIS/roll_call_lists/vote_menu_119_1.xml`. If it is blocked there too, the legitimate options are to ask the Senate (the LIS / webmaster) about access for a polite, rate-limited client, or to use a published mirror of the same XML. Spoofing a browser is not an option.
+- **senate.gov access.** Scripted GET requests get `403` from Akamai, so Senate votes come from Voteview by default. If the Senate webmaster grants access, switch to `source = "senate_gov"`. To test access, use a GET request; a HEAD request (`curl -I`) succeeds even when GET is blocked: `curl -s -o /dev/null -w "%{http_code}\n" -A "vote-tracker/0.1 (you@example.com)" https://www.senate.gov/legislative/LIS/roll_call_lists/vote_menu_119_1.xml`. Spoofing a browser is not an option.
 - **Has Congress.gov added Senate votes?** Not as of 2026-10-23: `GET /v3/senate-vote/119/1` returns `404 Unknown resource`. Check again before the next phase. If an endpoint appears, prefer it and keep the XML client as a fallback.
 - **Does the House member-votes response include party?** Yes: each result has `voteParty` and `voteState`, so no lookup is needed. Settled with the first fixture.
 - **Which local model gives acceptable summaries?** Only lightly tested. `llama3.1:latest` (8B) produced valid, neutral bullets for H.R. 3424 from its CRS summary, but reused the bill's own short title ("SPACE Act of 2025") as the plain title, which the prompt asks it to avoid. Compare two or three models (for example `qwen3.8`, `gemma4:26b`) on the same 10 bills before choosing.

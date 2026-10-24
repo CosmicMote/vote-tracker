@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from tracker import db
-from tracker.config import DigestConfig, LlmConfig, MembersConfig, Settings, StorageConfig
+from tracker.config import DigestConfig, LlmConfig, MembersConfig, SenateConfig, Settings, StorageConfig
 
 FIXTURES = Path(__file__).parent / "fixtures"
 TRACKED = ["D000197", "B001267", "H000273"]  # DeGette (CO-1), Bennet, Hickenlooper
@@ -43,6 +43,7 @@ def clean_env(monkeypatch):
 def settings(tmp_path: Path) -> Settings:
     return Settings(
         members=MembersConfig(tracked=TRACKED),
+        senate=SenateConfig(source="senate_gov"),  # most tests use the senate.gov XML fixtures
         llm=LlmConfig(provider="ollama", model="test-model", prompt_version="v1"),
         digest=DigestConfig(output_dir=tmp_path / "digests", timezone="America/Denver"),
         storage=StorageConfig(db_path=tmp_path / "t.db", log_dir=tmp_path / "logs"),

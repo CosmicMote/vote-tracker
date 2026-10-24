@@ -258,6 +258,15 @@ export default function DigestView({ digest }: { digest: Digest }) {
           Only recorded roll-call votes are covered. Voice votes and unanimous consent leave no record of individual
           positions.
         </p>
+        {digest.senate_source === "voteview" && (
+          <p>
+            Senate roll-call votes are from Voteview: Lewis, Poole, Rosenthal, Boche, Rudkin and Sonnet,{" "}
+            <a href="https://voteview.com/" target="_blank" rel="noreferrer">
+              Voteview: Congressional Roll-Call Votes Database
+            </a>
+            . Voteview publishes the date of each vote but not the time.
+          </p>
+        )}
         <p>Data as of: {digest.as_of.map((a) => `${a.source}, ${a.at}`).join("; ") || "no data yet"}.</p>
       </footer>
     </div>

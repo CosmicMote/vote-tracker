@@ -71,6 +71,21 @@ class HttpConfig(BaseModel):
     max_attempts: int = Field(5, ge=1, description="Attempts for 429 and 5xx responses, honoring Retry-After.")
 
 
+class SenateConfig(BaseModel):
+    """Where Senate roll-call votes come from."""
+
+    source: Literal["voteview", "senate_gov"] = Field(
+        "voteview",
+        description=(
+            "voteview: Voteview's per-Congress CSV files (UCLA; reachable by scripts). "
+            "senate_gov: senate.gov's official XML, which blocks many scripted clients."
+        ),
+    )
+    voteview_url: str = Field(
+        "https://voteview.com/static/data/out", description="Voteview data root (rollcalls/, votes/, members/)."
+    )
+
+
 class LlmConfig(BaseModel):
     """Bill summaries. Secrets (ANTHROPIC_API_KEY) come from the environment."""
 
@@ -172,6 +187,7 @@ class Settings(BaseModel):
     members: MembersConfig
     congress: CongressConfig = Field(default_factory=CongressConfig)
     http: HttpConfig = Field(default_factory=HttpConfig)
+    senate: SenateConfig = Field(default_factory=SenateConfig)
     llm: LlmConfig = Field(default_factory=LlmConfig)
     digest: DigestConfig = Field(default_factory=DigestConfig)
     email: EmailConfig = Field(default_factory=EmailConfig)

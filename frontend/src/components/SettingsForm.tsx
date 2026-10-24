@@ -18,6 +18,7 @@ const SECTION_TITLES: Record<string, string> = {
   members: "Members",
   congress: "Congress",
   http: "HTTP",
+  senate: "Senate votes",
   llm: "Summaries (LLM)",
   digest: "Digest",
   email: "Email",
