@@ -29,6 +29,16 @@ def no_network(monkeypatch):
     monkeypatch.setattr(socket, "create_connection", guard)
 
 
+TRACKER_ENV = ("CONGRESS_GOV_API_KEY", "ANTHROPIC_API_KEY", "SMTP_PASSWORD", "TRACKER_CONFIG", "TRACKER_ALLOWED_HOSTS")
+
+
+@pytest.fixture(autouse=True)
+def clean_env(monkeypatch):
+    """Tests never see the developer's real keys or config path; a test that needs one sets it."""
+    for name in TRACKER_ENV:
+        monkeypatch.delenv(name, raising=False)
+
+
 @pytest.fixture
 def settings(tmp_path: Path) -> Settings:
     return Settings(

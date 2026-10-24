@@ -41,8 +41,6 @@ class FakeProvider:
 
 @pytest.fixture
 def app_env(tmp_path, monkeypatch):
-    monkeypatch.delenv("CONGRESS_GOV_API_KEY", raising=False)
-    monkeypatch.delenv("SMTP_PASSWORD", raising=False)
     monkeypatch.setattr("tracker.llm.make_provider", lambda settings: FakeProvider())
     cfg = tmp_path / "config.toml"
     cfg.write_text(CONFIG.format(tmp=tmp_path))
