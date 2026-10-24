@@ -2,20 +2,18 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import sqlite3
-import sys
 from contextlib import contextmanager
 from datetime import date, datetime
-from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Iterator, Optional
 
 import typer
 
-from . import analyze, db, deliver, render
+from . import analyze, db, pipeline
 from .config import Settings, load_settings
+from .logs import configure_logging
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, help="Weekly digest of your congressional delegation.")
 log = logging.getLogger("tracker")
@@ -36,19 +34,7 @@ def main(
 
 
 def setup_logging(settings: Settings) -> None:
-    root = logging.getLogger()
-    if root.handlers:
-        return
-    root.setLevel(logging.DEBUG if State.verbose else logging.INFO)
-    fmt = logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
-    out = logging.StreamHandler(sys.stdout)
-    out.setFormatter(fmt)
-    root.addHandler(out)
-    settings.storage.log_dir.mkdir(parents=True, exist_ok=True)
-    fh = RotatingFileHandler(settings.storage.log_dir / "tracker.log", maxBytes=5_000_000, backupCount=5)
-    fh.setFormatter(fmt)
-    root.addHandler(fh)
-    logging.getLogger("httpx").setLevel(logging.WARNING)  # its request lines would include the API key
+    configure_logging(settings, State.verbose)
 
 
 def settings() -> Settings:
@@ -68,21 +54,17 @@ def open_db(s: Settings) -> sqlite3.Connection:
 
 
 @contextmanager
-def logged_run(conn: sqlite3.Connection, command: str) -> Iterator[dict]:
-    """Write a run_log row. The body fills `run` with 'status' and 'stats'; an exception marks it failed."""
-    run_id = db.start_run(conn, command)
-    run: dict = {"status": "ok", "stats": {}}
+def cli_stage() -> Iterator[None]:
+    """Turn a failed pipeline stage into exit status 1 (the stage already logged why)."""
     try:
-        yield run
-    except typer.Exit:
-        db.finish_run(conn, run_id, run.get("status", "failed"), run["stats"])
-        raise
-    except Exception as e:
-        run["stats"]["error"] = str(e)
-        db.finish_run(conn, run_id, "failed", run["stats"])
-        log.error("%s failed: %s", command, e, exc_info=State.verbose)
+        yield
+    except pipeline.StageFailed as e:
+        typer.echo(f"error: {e}", err=True)
         raise typer.Exit(1) from None
-    db.finish_run(conn, run_id, run["status"], run["stats"])
+
+
+def logged_run(conn: sqlite3.Connection, command: str):
+    return pipeline.logged_run(conn, command, State.verbose)
 
 
 def parse_period(s: Settings, week: Optional[str]) -> analyze.Period:
@@ -102,29 +84,9 @@ def init_db_cmd() -> None:
     """Create the database from schema.sql; safe to re-run."""
     s = settings()
     conn = open_db(s)
-    with logged_run(conn, "init-db"):
+    with cli_stage(), logged_run(conn, "init-db"):
         pass
     typer.echo(f"database ready at {s.storage.db_path}")
-
-
-def do_ingest(conn: sqlite3.Connection, s: Settings, chamber: Optional[str], since: Optional[date]) -> str:
-    from .ingest import Sources, run_ingest
-
-    sources = Sources.from_settings(s)
-    try:
-        with logged_run(conn, "ingest") as run:
-            result = run_ingest(conn, s, sources, chamber=chamber, since=since)
-            run["stats"] = result.as_dict()
-            run["status"] = result.status
-            wanted = [chamber] if chamber else ["house", "senate"]
-            if all(f"{c}_votes" in result.failed_sources for c in wanted):
-                run["status"] = "failed"
-                log.error("ingest failed for every requested chamber")
-                raise typer.Exit(1)
-            log.info("ingest %s: %s", result.status, json.dumps(run["stats"], sort_keys=True))
-            return result.status
-    finally:
-        sources.http.close()
 
 
 @app.command()
@@ -136,84 +98,38 @@ def ingest(
     if chamber not in (None, "house", "senate"):
         raise typer.BadParameter("chamber must be house or senate")
     s = settings()
-    do_ingest(open_db(s), s, chamber, date.fromisoformat(since) if since else None)
-
-
-def do_normalize(conn: sqlite3.Connection, s: Settings, all_records: bool) -> None:
-    from .normalize import run_normalize
-
-    with logged_run(conn, "normalize") as run:
-        stats = run_normalize(conn, s, all_records)
-        run["stats"] = dict(stats)
-        run["status"] = "partial" if any(k.endswith("_errors") for k in stats) else "ok"
-        log.info("normalize %s: %s", run["status"], json.dumps(run["stats"], sort_keys=True))
+    with cli_stage():
+        pipeline.ingest(open_db(s), s, chamber, date.fromisoformat(since) if since else None, State.verbose)
 
 
 @app.command()
 def normalize(all_records: bool = typer.Option(False, "--all", help="Re-parse every raw record.")) -> None:
     """Stage 2: parse raw records into the relational tables."""
     s = settings()
-    do_normalize(open_db(s), s, all_records)
-
-
-def do_analyze(conn: sqlite3.Connection, s: Settings, period: analyze.Period) -> None:
-    with logged_run(conn, "analyze") as run:
-        result = analyze.run_analyze(conn, s, period)
-        run["stats"] = {"period": [period.start.isoformat(), period.end.isoformat()], **result.stats}
-        log.info("analyze %s..%s: %s", period.start, period.end, json.dumps(dict(result.stats), sort_keys=True))
+    with cli_stage():
+        pipeline.normalize(open_db(s), s, all_records, State.verbose)
 
 
 @app.command("analyze")
 def analyze_cmd(week: Optional[str] = typer.Option(None, help=WEEK_HELP)) -> None:
     """Stage 3: caucus positions, findings, scoring and selection for a week."""
     s = settings()
-    do_analyze(open_db(s), s, parse_period(s, week))
-
-
-def do_summarize(conn: sqlite3.Connection, s: Settings, period: analyze.Period) -> None:
-    from .llm import make_provider
-    from .sources.congress_gov import CongressGovClient
-    from .sources.http import HttpClient
-    from .summarize import run_summarize
-
-    provider = make_provider(s)
-    http = HttpClient(s.http.user_agent, s.http.min_interval_seconds, s.http.timeout_seconds, s.http.max_attempts)
-    key = s.secrets.congress_gov_api_key
-    try:
-        with logged_run(conn, "summarize") as run:
-            stats = run_summarize(conn, s, period, provider, CongressGovClient(http, key) if key else None)
-            run["stats"] = {"provider": provider.name, **stats}
-            run["status"] = "partial" if stats.get("failed") else "ok"
-            log.info("summarize: %s", json.dumps(run["stats"], sort_keys=True))
-    finally:
-        http.close()
+    with cli_stage():
+        pipeline.analyze_week(open_db(s), s, parse_period(s, week), State.verbose)
 
 
 @app.command()
 def summarize(week: Optional[str] = typer.Option(None, help=WEEK_HELP)) -> None:
     """Stage 4: LLM summaries for bills attached to the week's selected findings."""
     s = settings()
-    do_summarize(open_db(s), s, parse_period(s, week))
+    with cli_stage():
+        pipeline.summarize_week(open_db(s), s, parse_period(s, week), State.verbose)
 
 
-def do_digest(conn: sqlite3.Connection, s: Settings, period: analyze.Period, send: bool) -> Path:
-    with logged_run(conn, "digest") as run:
-        subject, path = render.write_digest(conn, s, period)
-        run["stats"] = {"path": str(path), "subject": subject, "sent": False}
-        typer.echo(f"wrote {path}")
-        if send:
-            if not s.email.enabled:
-                log.info("email.enabled is false; not sending")
-            else:
-                try:
-                    deliver.send_digest(s, subject, path)
-                    run["stats"]["sent"] = True
-                    typer.echo(f"sent to {s.email.to_addr}")
-                except deliver.DeliveryError as e:
-                    # The rendered file stays on disk; delivery is retried by re-running digest --send.
-                    log.error("delivery failed: %s", e)
-                    run["status"] = "partial"
-    return path
+def report_digest(s: Settings, run: dict) -> None:
+    typer.echo(f"wrote {run['stats']['path']}")
+    if run["stats"]["sent"]:
+        typer.echo(f"sent to {s.email.to_addr}")
 
 
 @app.command()
@@ -223,7 +139,8 @@ def digest(
 ) -> None:
     """Stages 5 and 6: render the digest HTML, and optionally email it."""
     s = settings()
-    do_digest(open_db(s), s, parse_period(s, week), send)
+    with cli_stage():
+        report_digest(s, pipeline.digest_week(open_db(s), s, parse_period(s, week), send, State.verbose))
 
 
 @app.command("run-weekly")
@@ -234,36 +151,56 @@ def run_weekly() -> None:
     period = analyze.last_full_week(s.digest.timezone)
     log.info("weekly run for %s..%s", period.start, period.end)
     try:
-        do_ingest(conn, s, None, None)
-    except typer.Exit:
+        pipeline.ingest(conn, s, verbose=State.verbose)
+    except pipeline.StageFailed:
         log.error("ingest failed; continuing with the data already stored")
-    do_normalize(conn, s, False)
-    do_analyze(conn, s, period)
+    with cli_stage():
+        pipeline.normalize(conn, s, verbose=State.verbose)
+        pipeline.analyze_week(conn, s, period, State.verbose)
     try:
-        do_summarize(conn, s, period)
-    except typer.Exit:
+        pipeline.summarize_week(conn, s, period, State.verbose)
+    except pipeline.StageFailed:
         log.error("summarize failed; the digest will use fallback summaries")
-    do_digest(conn, s, period, send=True)
+    with cli_stage():
+        report_digest(s, pipeline.digest_week(conn, s, period, True, State.verbose))
+
+
+@app.command()
+def serve(
+    host: str = typer.Option("127.0.0.1", help="Interface to bind. Keep the default: the app has no login."),
+    port: int = typer.Option(8000, help="Port to listen on."),
+    reload: bool = typer.Option(False, help="Auto-reload on code changes (development)."),
+) -> None:
+    """Run the web app (UI + API) at http://HOST:PORT."""
+    import os
+
+    import uvicorn
+
+    s = settings()  # fail early on a bad config
+    if host not in ("127.0.0.1", "localhost", "::1"):
+        typer.echo("warning: the web app has no authentication; binding beyond localhost exposes it", err=True)
+    os.environ["TRACKER_CONFIG"] = str((State.config_path or Path("config.toml")).resolve())
+    os.environ["TRACKER_ALLOWED_HOSTS"] = ",".join({"127.0.0.1", "localhost", host})
+    typer.echo(f"serving on http://{host}:{port}  (database {s.storage.db_path})")
+    uvicorn.run("tracker.web.app:create_app", factory=True, host=host, port=port, reload=reload, log_config=None)
 
 
 @app.command()
 def members() -> None:
     """Show tracked members as resolved: chamber, state, Bioguide and LIS IDs."""
-    from .ingest import ensure_crosswalk, resolve_tracked, IngestResult
+    from .ingest import IngestResult, ensure_crosswalk, resolve_tracked
     from .sources.http import HttpClient
     from .sources.legislators import CrosswalkError
 
     s = settings()
     conn = open_db(s)
     http = HttpClient(s.http.user_agent, s.http.min_interval_seconds, s.http.timeout_seconds, s.http.max_attempts)
-    with logged_run(conn, "members") as run:
+    with cli_stage(), logged_run(conn, "members") as run:
         try:
             crosswalk = ensure_crosswalk(conn, s, http, IngestResult(), datetime.now().astimezone())
             people = resolve_tracked(crosswalk, s.members.tracked)
         except CrosswalkError as e:
-            run["status"] = "failed"
-            typer.echo(f"error: {e}", err=True)
-            raise typer.Exit(1) from None
+            raise pipeline.StageFailed("members", str(e)) from None
         finally:
             http.close()
         run["stats"] = {"resolved": len(people)}
@@ -286,14 +223,12 @@ def explain_vote(
     if "-" not in session:
         session = f"{s.congress.number}-{session}"
     conn = open_db(s)
-    with logged_run(conn, "explain-vote") as run:
+    with cli_stage(), logged_run(conn, "explain-vote") as run:
         run["stats"] = {"vote": f"{chamber}/{session}/{roll}"}
         try:
             info = analyze.explain_vote(conn, s, chamber, session, roll)
         except LookupError as e:
-            run["status"] = "failed"
-            typer.echo(f"error: {e}", err=True)
-            raise typer.Exit(1) from None
+            raise pipeline.StageFailed("explain-vote", str(e)) from None
     v = info["vote"]
     typer.echo(f"{chamber.title()} {session} roll {roll} — {v['vote_date']}")
     typer.echo(f"  question:   {v['question']}")

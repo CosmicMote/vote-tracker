@@ -7,3 +7,8 @@ config.toml
 *.db-journal
 digests/
 logs/
+config.toml.bak
+config.toml.tmp
+frontend/node_modules/
+# Built UI (npm --prefix frontend run build)
+src/tracker/web/static/

@@ -119,12 +119,16 @@ def ensure_bill_text(conn: sqlite3.Connection, cg: CongressGovClient, bill_id: i
     return False
 
 
-def cached_summary(
-    conn: sqlite3.Connection, bill_id: int, basis: Basis, prompt_version: str
-) -> sqlite3.Row | None:
+def summary_model(settings: Settings) -> str:
+    """The model that writes summaries, as '<provider>:<model>' (matches SummaryProvider.name)."""
+    return f"{settings.llm.provider}:{settings.llm.model}"
+
+
+def cached_summary(conn: sqlite3.Connection, bill_id: int, basis: Basis, settings: Settings) -> sqlite3.Row | None:
+    """The summary for this basis written with the configured prompt version and model, if any."""
     return conn.execute(
-        "SELECT * FROM llm_summary WHERE bill_id=? AND basis=? AND basis_version=? AND prompt_version=?",
-        (bill_id, basis.kind, basis.version, prompt_version),
+        "SELECT * FROM llm_summary WHERE bill_id=? AND basis=? AND basis_version=? AND prompt_version=? AND model=?",
+        (bill_id, basis.kind, basis.version, settings.llm.prompt_version, summary_model(settings)),
     ).fetchone()
 
 
@@ -135,8 +139,7 @@ def summarize_bill(
     basis = choose_basis(conn, bill_id, settings.llm.max_input_chars)
     if basis.kind == "title_only":
         return "title_only"
-    pv = settings.llm.prompt_version
-    if cached_summary(conn, bill_id, basis, pv):
+    if cached_summary(conn, bill_id, basis, settings):
         return "cached"
     b = bill_row(conn, bill_id)
     text = basis.text + ("\n\n[Material truncated.]" if basis.truncated else "")
@@ -162,7 +165,15 @@ def summarize_bill(
         conn.execute(
             "INSERT INTO llm_summary (bill_id, basis, basis_version, prompt_version, model, output_json, created_at)"
             " VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (bill_id, basis.kind, basis.version, pv, provider.name, parsed.model_dump_json(), db.utcnow()),
+            (
+                bill_id,
+                basis.kind,
+                basis.version,
+                settings.llm.prompt_version,
+                summary_model(settings),
+                parsed.model_dump_json(),
+                db.utcnow(),
+            ),
         )
         conn.commit()
         return "created"
@@ -232,7 +243,7 @@ def summary_view(conn: sqlite3.Connection, bill_id: int, settings: Settings) -> 
     }
     if basis.kind == "title_only":
         return {**view, "provenance": PROVENANCE["title_only"]}
-    cached = cached_summary(conn, bill_id, basis, settings.llm.prompt_version)
+    cached = cached_summary(conn, bill_id, basis, settings)
     if cached:
         out = json.loads(cached["output_json"])
         return {
@@ -245,3 +256,13 @@ def summary_view(conn: sqlite3.Connection, bill_id: int, settings: Settings) -> 
     if basis.kind == "crs":
         return {**view, "excerpt": first_sentences(basis.text), "provenance": PROVENANCE["crs_excerpt"]}
     return {**view, "provenance": PROVENANCE["unavailable"]}
+
+
+def pending_summaries(conn: sqlite3.Connection, period: Period, settings: Settings) -> list[int]:
+    """Bills in the week's digest that could get an AI summary but do not have one yet."""
+    pending = []
+    for bill_id in digest_bill_ids(conn, period):
+        basis = choose_basis(conn, bill_id, settings.llm.max_input_chars)
+        if basis.kind != "title_only" and not cached_summary(conn, bill_id, basis, settings):
+            pending.append(bill_id)
+    return pending

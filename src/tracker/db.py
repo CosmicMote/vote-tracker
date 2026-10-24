@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import sqlite3
 from contextlib import contextmanager
 from datetime import UTC, datetime
@@ -22,6 +23,7 @@ def connect(path: Path | str) -> sqlite3.Connection:
     conn = sqlite3.connect(str(path))
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA busy_timeout = 15000")  # the web app's request and job threads share the file
     if str(path) != ":memory:":
         conn.execute("PRAGMA journal_mode = WAL")
     return conn
@@ -30,7 +32,38 @@ def connect(path: Path | str) -> sqlite3.Connection:
 def init_db(conn: sqlite3.Connection) -> None:
     sql = resources.files("tracker").joinpath("schema.sql").read_text()
     conn.executescript(sql)
+    migrate(conn, sql)
     conn.commit()
+
+
+def _primary_key(conn: sqlite3.Connection, table: str) -> list[str]:
+    cols = [r for r in conn.execute(f"PRAGMA table_info({table})") if r["pk"]]
+    return [r["name"] for r in sorted(cols, key=lambda r: r["pk"])]
+
+
+def migrate(conn: sqlite3.Connection, schema_sql: str) -> None:
+    """Bring databases created by older versions up to schema.sql. Each step is idempotent."""
+    # llm_summary gained `model` in its primary key, so each model keeps its own summaries.
+    if "model" not in _primary_key(conn, "llm_summary"):
+        create = re.search(r"CREATE TABLE IF NOT EXISTS llm_summary \((.*?)\n\);", schema_sql, re.DOTALL)
+        assert create, "llm_summary definition not found in schema.sql"
+        # SQLite's table-rebuild procedure: foreign keys off, so a stray row cannot block the copy.
+        conn.commit()
+        conn.execute("PRAGMA foreign_keys = OFF")
+        try:
+            conn.executescript(
+                "BEGIN;"
+                f"CREATE TABLE llm_summary_new ({create.group(1)}\n);"
+                "INSERT INTO llm_summary_new"
+                " (bill_id, basis, basis_version, prompt_version, model, output_json, created_at)"
+                " SELECT bill_id, basis, basis_version, prompt_version, model, output_json, created_at"
+                " FROM llm_summary;"
+                "DROP TABLE llm_summary;"
+                "ALTER TABLE llm_summary_new RENAME TO llm_summary;"
+                "COMMIT;"
+            )
+        finally:
+            conn.execute("PRAGMA foreign_keys = ON")
 
 
 @contextmanager

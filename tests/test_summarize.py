@@ -57,7 +57,9 @@ def test_valid_json_is_stored_and_cached(conn, settings):
     assert summarize_bill(conn, p, bid, settings) == "cached"
     assert len(p.calls) == 1
     row = conn.execute("SELECT * FROM llm_summary").fetchone()
-    assert (row["basis"], row["basis_version"], row["prompt_version"], row["model"]) == ("crs", "00", "v1", "fake:test")
+    assert (row["basis"], row["basis_version"], row["prompt_version"], row["model"]) == (
+        "crs", "00", "v1", "ollama:test-model"
+    )
     view = summary_view(conn, bid, settings)
     assert view["plain_title"] == "Extends federal grazing permit terms"
     assert view["provenance"] == PROVENANCE["crs"]
@@ -177,3 +179,70 @@ def test_rule_vote_summarizes_underlying_bill(conn, settings, week):
     run_summarize(conn, settings, week, p)
     assert len(p.calls) == 1 and "S. 3838" in p.calls[0][1]
     assert conn.execute("SELECT bill_id FROM llm_summary").fetchone()[0] == under
+
+
+OTHER = json.dumps(
+    {
+        "plain_title": "Lengthens grazing permits on federal land",
+        "what_it_does": ["Doubles grazing permit terms to 20 years.", "Sets a 180-day deadline for renewals."],
+        "caveat": None,
+    }
+)
+
+
+def test_model_change_regenerates_and_switching_back_reuses(conn, settings):
+    bid = add_bill(conn)
+    p = FakeProvider(VALID, OTHER)
+    assert summarize_bill(conn, p, bid, settings) == "created"  # ollama:test-model
+
+    settings.llm.provider, settings.llm.model = "anthropic", "claude-opus-5-5"
+    assert summary_view(conn, bid, settings)["bullets"] == []  # nothing yet for this model
+    assert summarize_bill(conn, p, bid, settings) == "created"
+    assert summary_view(conn, bid, settings)["plain_title"] == "Lengthens grazing permits on federal land"
+
+    settings.llm.provider, settings.llm.model = "ollama", "test-model"
+    assert summarize_bill(conn, p, bid, settings) == "cached"  # the original is still there
+    assert summary_view(conn, bid, settings)["plain_title"] == "Extends federal grazing permit terms"
+    assert len(p.calls) == 2
+    models = [r[0] for r in conn.execute("SELECT model FROM llm_summary ORDER BY model")]
+    assert models == ["anthropic:claude-opus-5-5", "ollama:test-model"]
+
+
+def test_pending_counts_bills_missing_a_summary_for_the_current_model(conn, settings, week):
+    from tracker.summarize import pending_summaries
+
+    conn.execute("INSERT INTO legislator (id, name, level, chamber) VALUES (1, 'Rep', 'federal', 'house')")
+    bid = add_bill(conn)
+    _finding(conn, 1, _vote(conn, "house", 10, bill_id=bid), bid, week)
+    summarize_bill(conn, FakeProvider(VALID), bid, settings)
+    assert pending_summaries(conn, week, settings) == []
+    settings.llm.model = "another-model"
+    assert pending_summaries(conn, week, settings) == [bid]
+
+
+def test_old_database_is_migrated_keeping_summaries(tmp_path):
+    import sqlite3
+
+    from tracker import db
+
+    path = tmp_path / "old.db"
+    old = sqlite3.connect(path)
+    old.executescript(
+        "CREATE TABLE llm_summary (bill_id INTEGER NOT NULL, basis TEXT NOT NULL, basis_version TEXT NOT NULL,"
+        " prompt_version TEXT NOT NULL, model TEXT NOT NULL, output_json TEXT NOT NULL, created_at TEXT NOT NULL,"
+        " PRIMARY KEY (bill_id, basis, basis_version, prompt_version));"
+        "INSERT INTO llm_summary VALUES (7, 'crs', '00', 'v1', 'ollama:llama3.1:latest', '{}', '2026-10-24T00:00:00Z');"
+    )
+    old.commit()
+    old.close()
+
+    conn = db.connect(path)
+    db.init_db(conn)
+    db.init_db(conn)  # idempotent
+    pk = [r["name"] for r in sorted((r for r in conn.execute("PRAGMA table_info(llm_summary)") if r["pk"]),
+                                    key=lambda r: r["pk"])]
+    assert pk == ["bill_id", "basis", "basis_version", "prompt_version", "model"]
+    assert [tuple(r) for r in conn.execute("SELECT bill_id, model FROM llm_summary")] == [(7, "ollama:llama3.1:latest")]
+    # A second model's summary for the same bill and basis now fits alongside the first.
+    conn.execute("INSERT INTO bill (id, jurisdiction, session, bill_type, number) VALUES (7, 'us', '119', 'hr', '7')")
+    conn.execute("INSERT INTO llm_summary VALUES (7, 'crs', '00', 'v1', 'anthropic:claude-opus-5-5', '{}', 'x')")

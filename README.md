@@ -11,7 +11,7 @@ The digest opens with **delegation splits**: Senate votes where your two senator
 
 Ingest, classification and scoring are deterministic code. A language model is used for one job only: describing what a bill does. It never sees how anyone voted. Every sentence about a member's vote is built from the official record by a fixed template.
 
-The digest is one self-contained HTML file per week, written to disk and optionally emailed. A Senate item looks like this (illustrative; the bullets come from the summarizer):
+The digest is one self-contained HTML file per week, written to disk and optionally emailed. The same digests can also be browsed in a local [web app](#web-app), where you pick the week and members and edit every setting. A Senate item looks like this (illustrative; the bullets come from the summarizer):
 
 > ### Makes continuing appropriations for fiscal year 2026 (H.R. 5371)
 > - *(2–4 bullets from the bill summary)*
@@ -72,6 +72,7 @@ For summaries, either run [Ollama](https://ollama.com) locally (`ollama pull lla
 | `tracker run-weekly` | All stages for the last full week, then send |
 | `tracker members` | Show tracked members as resolved: chamber, state, district, Bioguide and LIS IDs, party, caucus |
 | `tracker explain-vote <chamber> <session> <roll>` | Print one vote's classification, threshold, caucus positions and per-member score, for tuning. Session is `119-1`, or just `1` |
+| `tracker serve [--host 127.0.0.1] [--port 8000]` | Run the [web app](#web-app) |
 
 Global options are `-c/--config PATH` (default `./config.toml`, or `$TRACKER_CONFIG`) and `-v/--verbose`.
 
@@ -87,6 +88,52 @@ Every command writes a `run_log` row with per-source counts. A command exits non
 Logs go to stdout and to a rotating file at `logs/tracker.log`. The Congress.gov key is never logged: it is stripped from every stored URL and from error messages, and httpx's own request logging, which would include it, is silenced.
 
 ---
+
+## Web app
+
+A local web UI on top of the same pipeline: a FastAPI JSON API plus a React single-page app. It is meant for one person on their own machine, so it has no login and binds to `127.0.0.1` by default. The CLI, cron and email keep working exactly as before, all reading the same `config.toml` and database.
+
+```bash
+npm --prefix frontend install        # once
+npm --prefix frontend run build      # builds the UI into src/tracker/web/static
+uv run tracker serve                 # http://127.0.0.1:8000
+```
+
+Start the server from a shell where `CONGRESS_GOV_API_KEY` (and, if needed, `ANTHROPIC_API_KEY` and `SMTP_PASSWORD`) are exported. Secrets are read from the environment at startup and are never shown in the UI or written to `config.toml`.
+
+**Digest tab.** Pick any week from the one containing 2025-01-03, the start of the 119th Congress, up to last week (the default). Arrows step one week at a time, and each week has its own URL (`#/digest/2026-09-14`). Opening a week that hasn't been analyzed runs analyze right away (it is fast and deterministic), so votes show up at once. Bill summaries are then written by a background job and fill in as they finish; until then the page shows the CRS excerpt. Background jobs run one at a time, so the week you're viewing gets priority: when you open a week, summary jobs for other weeks that haven't started yet are cancelled, and are queued again if you go back to those weeks. A summary job that is already running always finishes. While a week's job waits, the page says what it is waiting behind. A mid-week date in the URL is rewritten to that week's Monday. A week is re-analyzed only when something changed: new data, different members, or different scoring settings. "Email version" opens the exact HTML the email would contain, and "Send email" mails it when email is enabled.
+
+**Members tab.** Choose who the digest covers by state or by name search. The selection is saved to `[members].tracked` in `config.toml`, so you only choose once, and the CLI and cron use it too. Votes for every member are already stored. For a newly added member, saving starts a background job that fetches their introduced and cosponsored bills (this needs the API key). The order of the list matters in one place: delegation splits compare the first two senators.
+
+**Admin tab.**
+- **Data:** vote counts, a staleness warning when a chamber's last ingest failed, and buttons for "Update data" (ingest + normalize), "Backfill from date", "Re-normalize" and "Fetch member list".
+- **Jobs:** this session's jobs with live status, and the `run_log` history.
+- **Secrets:** whether each one is set; values are never shown.
+- **Settings:** every `config.toml` setting, generated from the pydantic models, with each field's description as help text. Saving validates first and shows errors next to the field. Only lines whose values changed are rewritten, so your comments and layout survive, and the previous file is kept as `config.toml.bak`.
+
+**How it is put together.**
+- `src/tracker/pipeline.py` holds the stage functions. The CLI and the web app share them, so both write the same `run_log` rows.
+- `src/tracker/web/jobs.py` runs background work on a single worker thread, so stages never overlap. A job that is already queued or running is not queued again.
+- `src/tracker/config_store.py` writes settings back with `tomlkit`.
+- The frontend lives in `frontend/` (Vite + React + TypeScript, no other runtime dependencies). For development, run `uv run tracker serve` and `npm --prefix frontend run dev` together: Vite serves the UI on `:5173` and proxies `/api` to the server on `:8000`.
+
+**API.** Interactive docs are at `/docs` (FastAPI's OpenAPI UI).
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /api/weeks` | Selectable weeks, newest first, and the default |
+| `GET /api/digest/{week}` | Analyze if stale, then return the digest as JSON, with summary progress |
+| `GET /api/digest/{week}/email` | The email HTML for that week |
+| `POST /api/digest/{week}/summarize`, `POST /api/digest/{week}/send` | Background jobs |
+| `GET /api/legislators`, `GET` and `PUT /api/members` | Current members of Congress; the tracked selection |
+| `GET` and `PUT /api/config` | All settings, their JSON Schema, and which secrets are set |
+| `GET` and `POST /api/jobs`, `GET /api/status` | Jobs and run history; data status |
+
+**Safety without a login.** Two guards stop other websites open in your browser from driving the app:
+- The server accepts only requests whose `Host` is `127.0.0.1` or `localhost`, which blocks DNS rebinding.
+- Every request that changes something must carry an `X-Tracker-Client` header. A cross-site page can't send that header without a CORS preflight, which this app never approves.
+
+If you bind to another interface with `--host`, `tracker serve` warns you, because anyone who can reach that port can change settings and send email.
 
 ## How it works
 
@@ -193,7 +240,7 @@ For each bill attached to a selected finding, using the underlying bill(s) for a
 
 The model gets the bill number, titles, policy area, a basis label and the basis text, and nothing about votes or members. Its output must match `{"plain_title": str, "what_it_does": [2–4 str], "caveat": str|null}`, validated with pydantic, which enforces at most 12 words in the title and at most 30 in each bullet. Invalid output is retried once, with the validation error appended. If the retry also fails, nothing is stored and the digest shows the first two sentences of the CRS summary instead.
 
-Results are cached in `llm_summary` by bill, basis, basis version and prompt version. A new CRS version, or bumping `llm.prompt_version`, regenerates summaries lazily as bills reappear. A bill voted on in both chambers is summarized once. Nominations never reach the model.
+Results are saved in `llm_summary`, keyed by bill, basis, basis version, prompt version and model (`<provider>:<model>`). A summary is regenerated lazily, as bills reappear, when any of these changes: a new CRS version is published, `llm.prompt_version` is bumped, or `llm.provider` / `llm.model` is switched. Summaries from other models are never deleted, so switching back to a model reuses its summaries without calling it again. (Databases created before the model was part of the key are migrated automatically on the next run, keeping every saved summary.) A bill voted on in both chambers is summarized once. Nominations never reach the model.
 
 | Provider | Implementation |
 | --- | --- |
@@ -284,6 +331,8 @@ The suite runs fully offline: an autouse fixture fails any test that opens a soc
 | `test_sponsorships.py` | Sponsored and cosponsored lists, cosponsorship dates from the bill's cosponsor list (fetched once per bill), and fetching bill text only when no CRS summary exists, latest version first |
 | `test_render.py` | Snapshots of the digest HTML for a fixed fixture database (one representative, two senators): `tests/snapshots/digest_2025-11-10.html` (Senate votes on H.R. 5371, sponsorships) and `digest_2025-09-08.html` (a House rule vote) |
 | `test_deliver.py`, `test_cli.py` | STARTTLS delivery, delivery failure keeping the file, CLI stages and `run_log` rows |
+| `test_web.py` | The API through FastAPI's TestClient: week bounds (back to 2025-01-03), analyze-once-until-changed, summaries filled in by the background job, members saved to `config.toml` with comments intact, config validation errors per field, jobs, the client-header and Host guards |
+| `test_config_store.py` | A no-op save leaves the file byte-identical; a change rewrites only its own lines; resetting to a default removes the line; secrets are never written |
 
 To update the render snapshot after an intended change, run `UPDATE_SNAPSHOTS=1 uv run pytest tests/test_render.py`.
 
@@ -306,6 +355,7 @@ The schema in `src/tracker/schema.sql` matches the spec, including the nullable 
 - **The Speaker** is detected from the crosswalk's `leadership_roles`.
 - **No temperature for Anthropic**, because the Messages API now rejects it (see Summarize). The Anthropic provider uses the official SDK rather than raw HTTP.
 - **Delegation splits** are computed when the digest is rendered, from stored votes, rather than stored as findings. The `finding.kind` values in the spec have no slot for them.
+- **Web app (beyond the spec).** The spec listed a web UI as a non-goal for the MVP; it was added afterward on request. It runs the same pipeline code, and adds one bookkeeping row type to `sync_state`: `data_version` and `analyzed:<week>`, used to re-analyze a week only when its inputs changed.
 - **The project lives at the repository root** rather than in a `vote-tracker/` subdirectory. The package is still `src/tracker`, and the distribution name is `vote-tracker`.
 - **Cosponsorship dates.** As far as the documentation shows, a member's cosponsored-legislation list gives each bill's introduced date, not the date the member signed on. So for each cosponsored bill, ingest fetches `/bill/{congress}/{type}/{number}/cosponsors` once, when the stored copy does not yet include the member, and takes `sponsorshipDate` and `sponsorshipWithdrawnDate` from it. If a list item does carry a `cosponsoredDate`, that date is used and the extra request is skipped. Withdrawn cosponsorships are not listed in the digest.
 - **Output schema bounds.** The schema sent to Ollama includes `minItems: 2, maxItems: 4` for the bullets. Ollama's constrained decoding enforces those bounds, and without them `llama3.1` returned six bullets twice in a row. The Anthropic provider removes these keywords, because structured outputs do not support them. Word limits are checked only by pydantic, for both providers.
@@ -354,6 +404,16 @@ src/tracker/
   render.py               stage 5: digest view model and vote-context templates
   deliver.py              stage 6: SMTP with STARTTLS
   templates/digest.html.j2
+  pipeline.py             stage functions shared by the CLI and the web app; run_log; data version
+  config_store.py         write settings back to config.toml (tomlkit, comment-preserving)
+  logs.py                 stdout + rotating file logging
+  web/
+    app.py                FastAPI app: JSON API, localhost guards, serves the built UI
+    jobs.py               single-worker background job queue
+    static/               built UI (generated by `npm --prefix frontend run build`, not committed)
+frontend/                 React + TypeScript UI (Vite)
+  src/pages/              DigestPage, MembersPage, AdminPage
+  src/components/         DigestView, WeekPicker, SettingsForm (schema-driven)
 tests/
   fixtures/{congress_gov,senate,legislators}/
   test_*.py

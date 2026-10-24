@@ -6,7 +6,10 @@
 {%- set ITEM = "margin:0 0 16px 0;padding:12px 14px;border:1px solid #e5e7eb;border-radius:6px;background:#ffffff;" -%}
 {%- set LINK = "color:#1d4ed8;text-decoration:underline;" -%}
 
-{%- macro bill_summary(b) -%}
+{%- macro bill_summary(b, labeled=false) -%}
+  {%- if labeled and not b.see_above %}
+  <p style="margin:10px 0 2px 0;font-size:14px;font-weight:600;color:#111827;">{{ b.number }}{% if b.plain_title != b.number %}<span style="font-weight:normal;{{ MUTED }}">: {{ b.plain_title }}</span>{% endif %}</p>
+  {%- endif %}
   {%- if b.see_above %}
   <p style="margin:6px 0;font-size:14px;{{ MUTED }}">{{ b.number }}: see the <a href="#{{ b.see_above }}" style="{{ LINK }}">summary above</a>.</p>
   {%- else %}
@@ -34,7 +37,7 @@
 <div style="{{ ITEM }}">
   <h4 style="margin:0 0 4px 0;font-size:16px;color:#111827;">{{ item.heading }}{% if item.number %} <span style="font-weight:normal;{{ MUTED }}">({{ item.number }})</span>{% endif %}</h4>
   {%- for b in item.bills %}
-  {{ bill_summary(b) }}
+  {{ bill_summary(b, item.bills | length > 1) }}
   {%- endfor %}
   {%- for v in item.votes %}
   <p style="margin:8px 0 0 0;font-size:14px;line-height:1.45;color:#111827;">

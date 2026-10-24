@@ -132,16 +132,17 @@ CREATE TABLE IF NOT EXISTS finding (
   detail_json   TEXT                 -- e.g. {"member":"yea","caucus_majority":"nay","caucus_split":"44-3"}
 );
 
--- LLM output cache; a new CRS version or prompt version triggers a new summary
+-- LLM output cache; a new CRS version, prompt version or model triggers a new summary.
+-- Summaries from other models are kept, so switching back to a model reuses its summaries.
 CREATE TABLE IF NOT EXISTS llm_summary (
   bill_id        INTEGER NOT NULL REFERENCES bill(id),
   basis          TEXT NOT NULL,      -- 'crs' | 'bill_text' | 'title_only'
   basis_version  TEXT NOT NULL,      -- CRS version_code, text version date, or 'title'
   prompt_version TEXT NOT NULL,
-  model          TEXT NOT NULL,
+  model          TEXT NOT NULL,      -- '<provider>:<model>', e.g. 'ollama:llama3.1:latest'
   output_json    TEXT NOT NULL,
   created_at     TEXT NOT NULL,
-  PRIMARY KEY (bill_id, basis, basis_version, prompt_version)
+  PRIMARY KEY (bill_id, basis, basis_version, prompt_version, model)
 );
 
 CREATE TABLE IF NOT EXISTS sync_state (

@@ -6,6 +6,7 @@ import os
 import tomllib
 from pathlib import Path
 from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -33,63 +34,102 @@ DEFAULT_BASE_WEIGHTS: dict[str, float] = {
 
 
 class MembersConfig(BaseModel):
-    tracked: list[str] = Field(min_length=1)
+    """Who the digest covers."""
+
+    tracked: list[str] = Field(
+        min_length=1,
+        description="Bioguide IDs. Chamber and LIS ID are resolved from the crosswalk.",
+    )
 
     @field_validator("tracked")
     @classmethod
     def _upper(cls, v: list[str]) -> list[str]:
-        return [b.strip().upper() for b in v]
+        out: list[str] = []
+        for b in (x.strip().upper() for x in v):
+            if b and b not in out:
+                out.append(b)
+        if not out:
+            raise ValueError("at least one Bioguide ID is required")
+        return out
 
 
 class CongressConfig(BaseModel):
-    number: int = 119
+    """Which Congress to follow."""
+
+    number: int = Field(119, ge=100, description="Congress number; 119 began on 2025-01-03.")
 
 
 class HttpConfig(BaseModel):
-    user_agent: str = "vote-tracker/0.1 (personal use; you@example.com)"
-    min_interval_seconds: float = 1.0
-    timeout_seconds: float = 30.0
-    max_attempts: int = 5
+    """How the tracker talks to Congress.gov, senate.gov and GitHub."""
+
+    user_agent: str = Field(
+        "vote-tracker/0.1 (personal use; you@example.com)",
+        description="Sent with every request. Include a contact address.",
+    )
+    min_interval_seconds: float = Field(1.0, ge=0, description="Minimum seconds between requests to one host.")
+    timeout_seconds: float = Field(30.0, gt=0, description="Per-request timeout.")
+    max_attempts: int = Field(5, ge=1, description="Attempts for 429 and 5xx responses, honoring Retry-After.")
 
 
 class LlmConfig(BaseModel):
-    provider: Literal["ollama", "anthropic"] = "ollama"
-    model: str = "llama3.1:8b"
-    base_url: str = "http://localhost:11434"
-    max_input_chars: int = 24000
-    prompt_version: str = "v1"
-    # Anthropic only. Effort level for the Messages API, and the server-side
-    # refusal fallback mode ("default", or "" to disable).
-    effort: str = "low"
-    fallbacks: str = "default"
+    """Bill summaries. Secrets (ANTHROPIC_API_KEY) come from the environment."""
+
+    provider: Literal["ollama", "anthropic"] = Field("ollama", description="Which summary provider to use.")
+    model: str = Field("llama3.1:8b", description='Model name, e.g. "llama3.1:latest" or "claude-opus-5-5".')
+    base_url: str = Field("http://localhost:11434", description="Ollama only: server URL.")
+    max_input_chars: int = Field(24000, ge=1000, description="Cap on bill text sent when no CRS summary exists.")
+    prompt_version: str = Field("v1", description="Bump to regenerate summaries lazily.")
+    effort: Literal["low", "medium", "high", "xhigh", "max"] = Field(
+        "low", description="Anthropic only: output_config.effort."
+    )
+    fallbacks: str = Field("default", description='Anthropic only: server-side refusal fallback; "" disables.')
 
 
 class DigestConfig(BaseModel):
-    top_n: int = 10
-    missed_vote_min_score: float = 1.0
-    output_dir: Path = Path("./digests")
-    timezone: str = "America/Denver"
+    """What the digest includes and where it goes."""
+
+    top_n: int = Field(10, ge=1, description="Scored votes per member, in addition to all party breaks.")
+    missed_vote_min_score: float = Field(1.0, ge=0, description="Missed votes at or above this are listed individually.")
+    output_dir: Path = Field(Path("./digests"), description="Where digest HTML files are written.")
+    timezone: str = Field("America/Denver", description="IANA time zone for weeks and displayed times.")
+
+    @field_validator("timezone")
+    @classmethod
+    def _tz(cls, v: str) -> str:
+        try:
+            ZoneInfo(v)
+        except (ZoneInfoNotFoundError, ValueError):
+            raise ValueError(f"unknown time zone {v!r}") from None
+        return v
 
 
 class EmailConfig(BaseModel):
-    enabled: bool = False
-    smtp_host: str = "smtp.example.com"
-    smtp_port: int = 587
-    smtp_user: str | None = None  # defaults to from_addr
-    from_addr: str = "tracker@example.com"
-    to_addr: str = "me@example.com"
+    """Email delivery over SMTP with STARTTLS. SMTP_PASSWORD comes from the environment."""
+
+    enabled: bool = Field(False, description="Send the digest by email.")
+    smtp_host: str = Field("smtp.example.com", description="SMTP server.")
+    smtp_port: int = Field(587, ge=1, le=65535, description="SMTP port (STARTTLS).")
+    smtp_user: str | None = Field(None, description="Login name; defaults to the From address.")
+    from_addr: str = Field("tracker@example.com", description="From address.")
+    to_addr: str = Field("me@example.com", description="Recipient.")
 
 
 class ScoringConfig(BaseModel):
-    base_weights: dict[str, float] = Field(default_factory=lambda: dict(DEFAULT_BASE_WEIGHTS))
-    party_break_bonus: float = 1.5
-    sponsor_bonus: float = 0.5
-    tie_breaker_bonus: float = 0.5
-    topic_boost: dict[str, float] = Field(default_factory=dict)
-    break_min_cohesion: float = 0.80
-    break_min_caucus_size: int = 5
-    lopsided_share: float = 0.95
-    contested_cohesion: float = 0.95
+    """Weights and thresholds for picking notable votes."""
+
+    base_weights: dict[str, float] = Field(
+        default_factory=lambda: dict(DEFAULT_BASE_WEIGHTS), description="Base weight per vote class."
+    )
+    party_break_bonus: float = Field(1.5, description="Added when the member broke from their caucus.")
+    sponsor_bonus: float = Field(0.5, description="Added when the member sponsored or cosponsored the bill.")
+    tie_breaker_bonus: float = Field(0.5, description="Added when the Vice President broke a tie.")
+    topic_boost: dict[str, float] = Field(
+        default_factory=dict, description="Congress.gov policy area -> added score."
+    )
+    break_min_cohesion: float = Field(0.80, ge=0, le=1, description="A break only counts against a caucus at least this united.")
+    break_min_caucus_size: int = Field(5, ge=1, description="Skip break detection for smaller caucuses.")
+    lopsided_share: float = Field(0.95, ge=0.5, le=1, description="Exclude votes with a yea share above this (or below 1 - this).")
+    contested_cohesion: float = Field(0.95, ge=0, le=1, description='Caucus cohesion below this makes a vote "contested".')
 
     @field_validator("base_weights")
     @classmethod
@@ -98,15 +138,20 @@ class ScoringConfig(BaseModel):
 
 
 class StorageConfig(BaseModel):
-    db_path: Path = Path("./tracker.db")
-    log_dir: Path = Path("./logs")
-    crosswalk_url: str = "https://unitedstates.github.io/congress-legislators/legislators-current.json"
-    # Former members, used only to map votes cast before someone left office. "" disables.
-    crosswalk_historical_url: str = (
-        "https://unitedstates.github.io/congress-legislators/legislators-historical.json"
+    """Files and data sources."""
+
+    db_path: Path = Field(Path("./tracker.db"), description="SQLite database file.")
+    log_dir: Path = Field(Path("./logs"), description="Directory for tracker.log.")
+    crosswalk_url: str = Field(
+        "https://unitedstates.github.io/congress-legislators/legislators-current.json",
+        description="congress-legislators current members (JSON).",
     )
-    crosswalk_max_age_days: int = 7
-    corrections_window_days: int = 14
+    crosswalk_historical_url: str = Field(
+        "https://unitedstates.github.io/congress-legislators/legislators-historical.json",
+        description='Former members, used only to map votes cast before someone left office. "" disables.',
+    )
+    crosswalk_max_age_days: int = Field(7, ge=1, description="Refresh the crosswalk when older than this.")
+    corrections_window_days: int = Field(14, ge=0, description="Re-fetch votes this recent to pick up corrections.")
 
 
 class Secrets(BaseModel):
