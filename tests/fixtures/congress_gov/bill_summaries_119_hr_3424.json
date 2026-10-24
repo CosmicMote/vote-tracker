@@ -1,0 +1,22 @@
+{
+    "pagination": {
+        "count": 1
+    },
+    "request": {
+        "billNumber": "3424",
+        "billType": "hr",
+        "billUrl": "https://api.congress.gov/v3/bill/119/hr/3424?format=json",
+        "congress": "119",
+        "contentType": "application/json",
+        "format": "json"
+    },
+    "summaries": [
+        {
+            "actionDate": "2025-05-15",
+            "actionDesc": "Introduced in House",
+            "text": "<p><strong>Shared Property Agency Collaboration and Engagement Act of 2025 or the SPACE Act of 2025</strong></p><p>This bill directs the General Services Administration (GSA) to collaborate with federal agencies&nbsp;regarding the use of shared-space arrangements in federally&nbsp;leased buildings.</p><p>The GSA must (1) collaborate with tenants of federally&nbsp;leased space to better identify concerns around shared-space arrangements; (2) develop criteria that would facilitate the expanded use of space sharing; (3) identify how special-use space can be used to improve space sharing; and (4) establish measurable objectives, in consultation with tenants, to quantify the success of shared-space arrangements among federal agencies.</p><p>GSA must brief Congress on implementation of the bill within six months after the bill's enactment.</p>",
+            "updateDate": "2025-09-05T20:08:59Z",
+            "versionCode": "00"
+        }
+    ]
+}

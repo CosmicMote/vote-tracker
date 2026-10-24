@@ -1,0 +1,34 @@
+[project]
+name = "vote-tracker"
+version = "0.1.0"
+description = "Weekly digest of your congressional delegation's roll-call votes, party breaks, missed votes and sponsorships"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=1.0",
+    "httpx>=0.27",
+    "jinja2>=3.1",
+    "pydantic>=2.7",
+    "tenacity>=8.2",
+    "typer>=0.12",
+]
+
+[project.scripts]
+tracker = "tracker.cli:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "respx>=0.21",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tracker"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

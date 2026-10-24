@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><vote_summary>
+  <congress>119</congress>
+  <session>1</session>
+  <congress_year>2025</congress_year>
+  <votes>
+    <vote>
+      <vote_number>00659</vote_number>
+      <vote_date>18-Dec</vote_date>
+      <issue>PN373</issue>
+      <question>On the Cloture Motion
+         </question>
+      <result>Agreed to</result>
+      <vote_tally>
+        <yeas>51</yeas>
+        <nays>42</nays>
+      </vote_tally>
+      <title>Motion to Invoke Cloture: Sara Bailey to be Director of National Drug Control Policy</title>
+    </vote>
+    <vote>
+      <vote_number>00654</vote_number>
+      <vote_date>18-Dec</vote_date>
+      <issue>S.J.Res. 82</issue>
+      <question>On the Joint Resolution
+         </question>
+      <result>Rejected</result>
+      <vote_tally>
+        <yeas>50</yeas>
+        <nays>50</nays>
+      </vote_tally>
+      <title>S. J. Res. 82; A joint resolution providing for congressional disapproval under chapter 8 of title 5, United States Code, of the rule submitted by the Office of the Secretary of the Department of Health and Human Services relating to "Policy on Adhering to the Text of the Administrative Procedure Act".</title>
+    </vote>
+    <vote>
+      <vote_number>00646</vote_number>
+      <vote_date>11-Dec</vote_date>
+      <issue>S. 1071</issue>
+      <question>On the Motion to Proceed
+         </question>
+      <result>Agreed to</result>
+      <vote_tally>
+        <yeas>75</yeas>
+        <nays>22</nays>
+      </vote_tally>
+      <title>Motion to Proceed to the House Message to Accompany S. 1071; A bill to require the Secretary of Veterans Affairs to disinter the remains of Fernando V. Cota from Fort Sam Houston National Cemetery, Texas, and for other purposes.</title>
+    </vote>
+    <vote>
+      <vote_number>00617</vote_number>
+      <vote_date>10-Nov</vote_date>
+      <issue>H.R. 5371</issue>
+      <question>On the Cloture Motion
+         </question>
+      <result>Agreed to</result>
+      <vote_tally>
+        <yeas>60</yeas>
+        <nays>40</nays>
+      </vote_tally>
+      <title>Motion to Invoke Cloture: H.R. 5371, As Amended; A bill making continuing appropriations and extensions for fiscal year 2026, and for other purposes.</title>
+    </vote>
+    <vote>
+      <vote_number>00616</vote_number>
+      <vote_date>10-Nov</vote_date>
+      <issue>H.R. 5371</issue>
+      <question>On the Amendment
+        <measure>S.Amdt. 3937</measure></question>
+      <result>Agreed to</result>
+      <vote_tally>
+        <yeas>60</yeas>
+        <nays>40</nays>
+      </vote_tally>
+      <title>Collins Amdt. No. 3937; In the nature of a substitute.</title>
+    </vote>
+    <vote>
+      <vote_number>00614</vote_number>
+      <vote_date>10-Nov</vote_date>
+      <issue>H.R. 5371</issue>
+      <question>On the Motion to Table
+        <measure>S.Amdt. 3941</measure></question>
+      <result>Agreed to</result>
+      <vote_tally>
+        <yeas>76</yeas>
+        <nays>24</nays>
+      </vote_tally>
+      <title>Motion to Table Paul Amdt. No. 3941; To strike a provision modifying the definition of hemp for purposes of the Agricultural Marketing Act of 1946.</title>
+    </vote>
+    <vote>
+      <vote_number>00524</vote_number>
+      <vote_date>17-Sep</vote_date>
+      <issue>PN12-19</issue>
+      <question>On the Decision of the Chair
+         </question>
+      <result>Not Sustained</result>
+      <vote_tally>
+        <yeas>47</yeas>
+        <nays>52</nays>
+      </vote_tally>
+      <title>Shall the Decision of the Chair stand as the Judgment of the Senate?</title>
+    </vote>
+    <vote>
+      <vote_number>00372</vote_number>
+      <vote_date>01-Jul</vote_date>
+      <issue>H.R. 1</issue>
+      <question>On Passage of the Bill
+         </question>
+      <result>Passed</result>
+      <vote_tally>
+        <yeas>50</yeas>
+        <nays>50</nays>
+      </vote_tally>
+      <title>H.R. 1, as Amended; A bill to provide for reconciliation pursuant to title II of H. Con. Res. 14.</title>
+    </vote>
+    <vote>
+      <vote_number>00015</vote_number>
+      <vote_date>24-Jan</vote_date>
+      <issue>PN11-7</issue>
+      <question>On the Nomination
+         </question>
+      <result>Confirmed</result>
+      <vote_tally>
+        <yeas>50</yeas>
+        <nays>50</nays>
+      </vote_tally>
+      <title>Confirmation: Peter Hegseth, of Tennessee, to be Secretary of Defense</title>
+    </vote>
+  </votes>
+</vote_summary>

@@ -1,0 +1,14 @@
+{
+  "pagination": {"count": 2},
+  "request": {"billNumber": "9003", "billType": "hr", "congress": "119", "contentType": "application/json", "format": "json"},
+  "textVersions": [
+    {"date": "2025-11-14T05:00:00Z", "formats": [
+      {"type": "Formatted Text", "url": "https://www.congress.gov/119/bills/hr9003/BILLS-119hr9003rh.htm"},
+      {"type": "PDF", "url": "https://www.congress.gov/119/bills/hr9003/BILLS-119hr9003rh.pdf"},
+      {"type": "Formatted XML", "url": "https://www.congress.gov/119/bills/hr9003/BILLS-119hr9003rh.xml"}
+    ], "type": "Reported in House"},
+    {"date": "2025-10-01T04:00:00Z", "formats": [
+      {"type": "Formatted Text", "url": "https://www.congress.gov/119/bills/hr9003/BILLS-119hr9003ih.htm"}
+    ], "type": "Introduced in House"}
+  ]
+}

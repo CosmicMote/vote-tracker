@@ -1,0 +1,3361 @@
+[
+ {
+  "id": {
+   "bioguide": "C000127",
+   "lis": "S275",
+   "govtrack": 300018
+  },
+  "name": {
+   "first": "Maria",
+   "last": "Cantwell",
+   "official_full": "Maria Cantwell"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "WA",
+    "class": 1,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "WA",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "K000367",
+   "lis": "S311",
+   "govtrack": 412242
+  },
+  "name": {
+   "first": "Amy",
+   "last": "Klobuchar",
+   "official_full": "Amy Klobuchar"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "MN",
+    "class": 1,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "MN",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Democratic Steering Committee Chair",
+    "chamber": "senate",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   },
+   {
+    "title": "Senate Democratic Steering Committee Chair",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "S000033",
+   "lis": "S313",
+   "govtrack": 400357
+  },
+  "name": {
+   "first": "Bernard",
+   "last": "Sanders",
+   "official_full": "Bernard Sanders"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "VT",
+    "class": 1,
+    "party": "Independent",
+    "caucus": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "VT",
+    "class": 1,
+    "party": "Independent",
+    "caucus": "Democrat"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Democratic Outreach Chair",
+    "chamber": "senate",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   },
+   {
+    "title": "Senate Democratic Outreach Chair",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "W000802",
+   "lis": "S316",
+   "govtrack": 412247
+  },
+  "name": {
+   "first": "Sheldon",
+   "last": "Whitehouse",
+   "official_full": "Sheldon Whitehouse"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "RI",
+    "class": 1,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "RI",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "B001261",
+   "lis": "S317",
+   "govtrack": 412251
+  },
+  "name": {
+   "first": "John",
+   "last": "Barrasso",
+   "official_full": "John Barrasso"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "WY",
+    "class": 1,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "WY",
+    "class": 1,
+    "party": "Republican"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Republican Conference Chair",
+    "chamber": "senate",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   },
+   {
+    "title": "Senate Majority Whip",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "W000437",
+   "lis": "S318",
+   "govtrack": 400432
+  },
+  "name": {
+   "first": "Roger",
+   "last": "Wicker",
+   "official_full": "Roger F. Wicker"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "MS",
+    "class": 1,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "MS",
+    "class": 1,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "C001035",
+   "lis": "S252",
+   "govtrack": 300025
+  },
+  "name": {
+   "first": "Susan",
+   "last": "Collins",
+   "official_full": "Susan M. Collins"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "ME",
+    "class": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "ME",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "C001056",
+   "lis": "S287",
+   "govtrack": 300027
+  },
+  "name": {
+   "first": "John",
+   "last": "Cornyn",
+   "official_full": "John Cornyn"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "TX",
+    "class": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "TX",
+    "class": 2,
+    "party": "Republican"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Majority Whip",
+    "chamber": "senate",
+    "start": "2015-01-03",
+    "end": "2017-01-03"
+   },
+   {
+    "title": "Senate Majority Whip",
+    "chamber": "senate",
+    "start": "2017-01-03",
+    "end": "2019-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "D000563",
+   "lis": "S253",
+   "govtrack": 300038
+  },
+  "name": {
+   "first": "Richard",
+   "last": "Durbin",
+   "official_full": "Richard J. Durbin"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "IL",
+    "class": 2,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "IL",
+    "class": 2,
+    "party": "Democrat"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Majority Whip",
+    "chamber": "senate",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   },
+   {
+    "title": "Senate Minority Whip",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "M000355",
+   "lis": "S174",
+   "govtrack": 300072
+  },
+  "name": {
+   "first": "Mitch",
+   "last": "McConnell",
+   "official_full": "Mitch McConnell"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "KY",
+    "class": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "KY",
+    "class": 2,
+    "party": "Republican"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Minority Leader",
+    "chamber": "senate",
+    "start": "2021-01-20",
+    "end": "2023-01-03"
+   },
+   {
+    "title": "Senate Minority Leader",
+    "chamber": "senate",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "M001176",
+   "lis": "S322",
+   "govtrack": 412325
+  },
+  "name": {
+   "first": "Jeff",
+   "last": "Merkley",
+   "official_full": "Jeff Merkley"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "OR",
+    "class": 2,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "OR",
+    "class": 2,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "R000122",
+   "lis": "S259",
+   "govtrack": 300081
+  },
+  "name": {
+   "first": "John",
+   "last": "Reed",
+   "official_full": "Jack Reed"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "RI",
+    "class": 2,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "RI",
+    "class": 2,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "R000584",
+   "lis": "S323",
+   "govtrack": 412322
+  },
+  "name": {
+   "first": "James",
+   "last": "Risch",
+   "official_full": "James E. Risch"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "ID",
+    "class": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "ID",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "S001181",
+   "lis": "S324",
+   "govtrack": 412323
+  },
+  "name": {
+   "first": "Jeanne",
+   "last": "Shaheen",
+   "official_full": "Jeanne Shaheen"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "NH",
+    "class": 2,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "NH",
+    "class": 2,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "W000805",
+   "lis": "S327",
+   "govtrack": 412321
+  },
+  "name": {
+   "first": "Mark",
+   "last": "Warner",
+   "official_full": "Mark R. Warner"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "VA",
+    "class": 2,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "VA",
+    "class": 2,
+    "party": "Democrat"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Democratic Conference Vice Chair",
+    "chamber": "senate",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   },
+   {
+    "title": "Senate Democratic Conference Vice Chair",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "G000555",
+   "lis": "S331",
+   "govtrack": 412223
+  },
+  "name": {
+   "first": "Kirsten",
+   "last": "Gillibrand",
+   "official_full": "Kirsten E. Gillibrand"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "NY",
+    "class": 1,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "NY",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "C001088",
+   "lis": "S337",
+   "govtrack": 412390
+  },
+  "name": {
+   "first": "Christopher",
+   "last": "Coons",
+   "official_full": "Christopher A. Coons"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "DE",
+    "class": 2,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "DE",
+    "class": 2,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "A000055",
+   "govtrack": 400004
+  },
+  "name": {
+   "first": "Robert",
+   "last": "Aderholt",
+   "official_full": "Robert B. Aderholt"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2023-01-03",
+    "end": "2025-01-03",
+    "state": "AL",
+    "district": 4,
+    "party": "Republican"
+   },
+   {
+    "type": "rep",
+    "start": "2025-01-03",
+    "end": "2027-01-03",
+    "state": "AL",
+    "district": 4,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "B001230",
+   "lis": "S354",
+   "govtrack": 400013
+  },
+  "name": {
+   "first": "Tammy",
+   "last": "Baldwin",
+   "official_full": "Tammy Baldwin"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "WI",
+    "class": 1,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "WI",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Democratic Conference Secretary",
+    "chamber": "senate",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   },
+   {
+    "title": "Senate Democratic Conference Secretary",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "B001267",
+   "lis": "S330",
+   "govtrack": 412330
+  },
+  "name": {
+   "first": "Michael",
+   "last": "Bennet",
+   "official_full": "Michael F. Bennet"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "CO",
+    "class": 3,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "CO",
+    "class": 3,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "B001243",
+   "govtrack": 400032,
+   "lis": "S396"
+  },
+  "name": {
+   "first": "Marsha",
+   "last": "Blackburn",
+   "official_full": "Marsha Blackburn"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "TN",
+    "class": 1,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "TN",
+    "class": 1,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "B001277",
+   "lis": "S341",
+   "govtrack": 412490
+  },
+  "name": {
+   "first": "Richard",
+   "last": "Blumenthal",
+   "official_full": "Richard Blumenthal"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "CT",
+    "class": 3,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "CT",
+    "class": 3,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "B001236",
+   "lis": "S343",
+   "govtrack": 400040
+  },
+  "name": {
+   "first": "John",
+   "last": "Boozman",
+   "official_full": "John Boozman"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "AR",
+    "class": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "AR",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "C001047",
+   "govtrack": 400061,
+   "lis": "S372"
+  },
+  "name": {
+   "first": "Shelley",
+   "last": "Capito",
+   "official_full": "Shelley Moore Capito"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "WV",
+    "class": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "WV",
+    "class": 2,
+    "party": "Republican"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Republican Conference Vice Chair",
+    "chamber": "senate",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   },
+   {
+    "title": "Senate Republican Policy Committee Chair",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "C001075",
+   "govtrack": 412269,
+   "lis": "S373"
+  },
+  "name": {
+   "first": "Bill",
+   "last": "Cassidy",
+   "official_full": "Bill Cassidy"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "LA",
+    "class": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "LA",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "C000880",
+   "lis": "S266",
+   "govtrack": 300030
+  },
+  "name": {
+   "first": "Michael",
+   "last": "Crapo",
+   "official_full": "Mike Crapo"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "ID",
+    "class": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "ID",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "D000197",
+   "govtrack": 400101
+  },
+  "name": {
+   "first": "Diana",
+   "last": "DeGette",
+   "official_full": "Diana DeGette"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2023-01-03",
+    "end": "2025-01-03",
+    "state": "CO",
+    "district": 1,
+    "party": "Democrat"
+   },
+   {
+    "type": "rep",
+    "start": "2025-01-03",
+    "end": "2027-01-03",
+    "state": "CO",
+    "district": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "G000386",
+   "lis": "S153",
+   "govtrack": 300048
+  },
+  "name": {
+   "first": "Charles",
+   "last": "Grassley",
+   "official_full": "Chuck Grassley"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "IA",
+    "class": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "IA",
+    "class": 3,
+    "party": "Republican"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "President Pro Tempore of the Senate",
+    "chamber": "senate",
+    "start": "2021-01-03",
+    "end": "2021-01-20"
+   },
+   {
+    "title": "President Pro Tempore of the Senate",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "H001046",
+   "lis": "S359",
+   "govtrack": 412281
+  },
+  "name": {
+   "first": "Martin",
+   "last": "Heinrich",
+   "official_full": "Martin Heinrich"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "NM",
+    "class": 1,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "NM",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "H001042",
+   "lis": "S361",
+   "govtrack": 412200
+  },
+  "name": {
+   "first": "Mazie",
+   "last": "Hirono",
+   "official_full": "Mazie K. Hirono"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "HI",
+    "class": 1,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "HI",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "H001061",
+   "lis": "S344",
+   "govtrack": 412494
+  },
+  "name": {
+   "first": "John",
+   "last": "Hoeven",
+   "official_full": "John Hoeven"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "ND",
+    "class": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "ND",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "J000293",
+   "lis": "S345",
+   "govtrack": 412496
+  },
+  "name": {
+   "first": "Ron",
+   "last": "Johnson",
+   "official_full": "Ron Johnson"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "WI",
+    "class": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "WI",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "L000575",
+   "govtrack": 412464,
+   "lis": "S378"
+  },
+  "name": {
+   "first": "James",
+   "last": "Lankford",
+   "official_full": "James Lankford"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "OK",
+    "class": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "OK",
+    "class": 3,
+    "party": "Republican"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Republican Conference Vice Chair",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "L000577",
+   "lis": "S346",
+   "govtrack": 412495
+  },
+  "name": {
+   "first": "Mike",
+   "last": "Lee",
+   "official_full": "Mike Lee"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "UT",
+    "class": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "UT",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "L000570",
+   "lis": "S409",
+   "govtrack": 412293
+  },
+  "name": {
+   "first": "Ben",
+   "last": "Luj\u00e1n",
+   "official_full": "Ben Ray Luj\u00e1n"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2019-01-03",
+    "end": "2021-01-03",
+    "state": "NM",
+    "district": 3,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "NM",
+    "class": 2,
+    "party": "Democrat"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Assistant Speaker of the House",
+    "chamber": "house",
+    "start": "2019-01-03",
+    "end": "2021-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "M000133",
+   "lis": "S369",
+   "govtrack": 400253
+  },
+  "name": {
+   "first": "Edward",
+   "last": "Markey",
+   "official_full": "Edward J. Markey"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "MA",
+    "party": "Democrat",
+    "class": 2
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "MA",
+    "class": 2,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "M000934",
+   "lis": "S347",
+   "govtrack": 400284
+  },
+  "name": {
+   "first": "Jerry",
+   "last": "Moran",
+   "official_full": "Jerry Moran"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "KS",
+    "class": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "KS",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "M001153",
+   "lis": "S288",
+   "govtrack": 300075
+  },
+  "name": {
+   "first": "Lisa",
+   "last": "Murkowski",
+   "official_full": "Lisa Murkowski"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "AK",
+    "class": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "AK",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "M001169",
+   "lis": "S364",
+   "govtrack": 412194
+  },
+  "name": {
+   "first": "Christopher",
+   "last": "Murphy",
+   "official_full": "Christopher Murphy"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "CT",
+    "class": 1,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "CT",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Democratic Conference Deputy Secretary",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "M001111",
+   "lis": "S229",
+   "govtrack": 300076
+  },
+  "name": {
+   "first": "Patty",
+   "last": "Murray",
+   "official_full": "Patty Murray"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "WA",
+    "class": 3,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "WA",
+    "class": 3,
+    "party": "Democrat"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Assistant Senate Majority Leader",
+    "chamber": "senate",
+    "start": "2021-01-20",
+    "end": "2023-01-03"
+   },
+   {
+    "title": "President Pro Tempore of the Senate",
+    "chamber": "senate",
+    "start": "2021-01-03",
+    "end": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "P000603",
+   "lis": "S348",
+   "govtrack": 412492
+  },
+  "name": {
+   "first": "Rand",
+   "last": "Paul",
+   "official_full": "Rand Paul"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "KY",
+    "class": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "KY",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "P000595",
+   "govtrack": 412305,
+   "lis": "S380"
+  },
+  "name": {
+   "first": "Gary",
+   "last": "Peters",
+   "official_full": "Gary C. Peters"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "MI",
+    "class": 2,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "MI",
+    "class": 2,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "S001150",
+   "lis": "S427",
+   "govtrack": 400361
+  },
+  "name": {
+   "first": "Adam",
+   "last": "Schiff",
+   "official_full": "Adam B. Schiff"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2024-12-09",
+    "end": "2025-01-03",
+    "state": "CA",
+    "party": "Democrat",
+    "class": 1
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "CA",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "S000148",
+   "lis": "S270",
+   "govtrack": 300087
+  },
+  "name": {
+   "first": "Charles",
+   "last": "Schumer",
+   "official_full": "Charles E. Schumer"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "NY",
+    "class": 3,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "NY",
+    "class": 3,
+    "party": "Democrat"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Majority Leader",
+    "chamber": "senate",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   },
+   {
+    "title": "Senate Minority Leader",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "S001184",
+   "lis": "S365",
+   "govtrack": 412471
+  },
+  "name": {
+   "first": "Tim",
+   "last": "Scott",
+   "official_full": "Tim Scott"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "SC",
+    "class": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "SC",
+    "class": 3,
+    "party": "Republican"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Republican Committee Chair",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "T000250",
+   "lis": "S303",
+   "govtrack": 400546
+  },
+  "name": {
+   "first": "John",
+   "last": "Thune",
+   "official_full": "John Thune"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "SD",
+    "class": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "SD",
+    "class": 3,
+    "party": "Republican"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Minority Whip",
+    "chamber": "senate",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   },
+   {
+    "title": "Senate Majority Leader",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "V000128",
+   "govtrack": 400415,
+   "lis": "S390"
+  },
+  "name": {
+   "first": "Chris",
+   "last": "Van Hollen",
+   "official_full": "Chris Van Hollen"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "MD",
+    "class": 3,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "MD",
+    "class": 3,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "W000800",
+   "lis": "S422",
+   "govtrack": 412239
+  },
+  "name": {
+   "first": "Peter",
+   "last": "Welch",
+   "official_full": "Peter Welch"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2021-01-03",
+    "end": "2023-01-03",
+    "state": "VT",
+    "district": 0,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "VT",
+    "class": 3,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "W000779",
+   "lis": "S247",
+   "govtrack": 300100
+  },
+  "name": {
+   "first": "Ron",
+   "last": "Wyden",
+   "official_full": "Ron Wyden"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "OR",
+    "class": 3,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "OR",
+    "class": 3,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "Y000064",
+   "govtrack": 412428,
+   "lis": "S391"
+  },
+  "name": {
+   "first": "Todd",
+   "last": "Young",
+   "official_full": "Todd Young"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "IN",
+    "class": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "IN",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "lis": "S353",
+   "bioguide": "S001194",
+   "govtrack": 412507
+  },
+  "name": {
+   "first": "Brian",
+   "last": "Schatz",
+   "official_full": "Brian Schatz"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "HI",
+    "class": 3,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "HI",
+    "class": 3,
+    "party": "Democrat"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Democratic Conference Deputy Secretary",
+    "chamber": "senate",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   },
+   {
+    "title": "Senate Democratic Conference Deputy Secretary",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "govtrack": 412508,
+   "bioguide": "C001095",
+   "lis": "S374"
+  },
+  "name": {
+   "first": "Tom",
+   "last": "Cotton",
+   "official_full": "Tom Cotton"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "AR",
+    "class": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "AR",
+    "class": 2,
+    "party": "Republican"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Republican Conference Chair",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "govtrack": 412533,
+   "bioguide": "D000622",
+   "lis": "S386"
+  },
+  "name": {
+   "first": "Tammy",
+   "last": "Duckworth",
+   "official_full": "Tammy Duckworth"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "IL",
+    "class": 3,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "IL",
+    "class": 3,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "W000817",
+   "lis": "S366",
+   "govtrack": 412542
+  },
+  "name": {
+   "first": "Elizabeth",
+   "last": "Warren",
+   "official_full": "Elizabeth Warren"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "MA",
+    "class": 1,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "MA",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Democratic Conference Vice Chair",
+    "chamber": "senate",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   },
+   {
+    "title": "Senate Democratic Conference Vice Chair",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "K000383",
+   "lis": "S363",
+   "govtrack": 412545
+  },
+  "name": {
+   "first": "Angus",
+   "last": "King",
+   "official_full": "Angus S. King, Jr."
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "ME",
+    "class": 1,
+    "party": "Independent",
+    "caucus": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "ME",
+    "class": 1,
+    "party": "Independent",
+    "caucus": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "govtrack": 412549,
+   "bioguide": "D000618",
+   "lis": "S375"
+  },
+  "name": {
+   "first": "Steve",
+   "last": "Daines",
+   "official_full": "Steve Daines"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "MT",
+    "class": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "MT",
+    "class": 2,
+    "party": "Republican"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Republican Committee Chair",
+    "chamber": "house",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "govtrack": 412555,
+   "bioguide": "C001096",
+   "lis": "S398"
+  },
+  "name": {
+   "first": "Kevin",
+   "last": "Cramer",
+   "official_full": "Kevin Cramer"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "ND",
+    "class": 1,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "ND",
+    "class": 1,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "F000463",
+   "lis": "S357",
+   "govtrack": 412556
+  },
+  "name": {
+   "first": "Deb",
+   "last": "Fischer",
+   "official_full": "Deb Fischer"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "NE",
+    "class": 1,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "NE",
+    "class": 1,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "C001098",
+   "lis": "S355",
+   "govtrack": 412573
+  },
+  "name": {
+   "first": "Ted",
+   "last": "Cruz",
+   "official_full": "Ted Cruz"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "TX",
+    "class": 1,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "TX",
+    "class": 1,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "K000384",
+   "lis": "S362",
+   "govtrack": 412582
+  },
+  "name": {
+   "first": "Timothy",
+   "last": "Kaine",
+   "official_full": "Tim Kaine"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "VA",
+    "class": 1,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "VA",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "B001288",
+   "lis": "S370",
+   "govtrack": 412598
+  },
+  "name": {
+   "first": "Cory",
+   "last": "Booker",
+   "official_full": "Cory A. Booker"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "NJ",
+    "class": 2,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "NJ",
+    "class": 2,
+    "party": "Democrat"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Democratic Policy & Communications Committee Vice Chair",
+    "chamber": "senate",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   },
+   {
+    "title": "Senate Democratic Strategic Communications Committee Chair",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "G000574",
+   "lis": "S432",
+   "govtrack": 412612
+  },
+  "name": {
+   "first": "Ruben",
+   "last": "Gallego",
+   "official_full": "Ruben Gallego"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2023-01-03",
+    "end": "2025-01-03",
+    "state": "AZ",
+    "district": 3,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "AZ",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "N000189",
+   "govtrack": 412660
+  },
+  "name": {
+   "first": "Dan",
+   "last": "Newhouse",
+   "official_full": "Dan Newhouse"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2023-01-03",
+    "end": "2025-01-03",
+    "state": "WA",
+    "district": 4,
+    "party": "Republican"
+   },
+   {
+    "type": "rep",
+    "start": "2025-01-03",
+    "end": "2027-01-03",
+    "state": "WA",
+    "district": 4,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "S001198",
+   "govtrack": 412665,
+   "lis": "S383"
+  },
+  "name": {
+   "first": "Dan",
+   "last": "Sullivan",
+   "official_full": "Dan Sullivan"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "AK",
+    "class": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "AK",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "E000295",
+   "govtrack": 412667,
+   "lis": "S376"
+  },
+  "name": {
+   "first": "Joni",
+   "last": "Ernst",
+   "official_full": "Joni Ernst"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "IA",
+    "class": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "IA",
+    "class": 2,
+    "party": "Republican"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Republican Conference Vice Chair",
+    "chamber": "senate",
+    "start": "2021-01-03",
+    "end": "2023-01-03"
+   },
+   {
+    "title": "Senate Republican Policy Committee Chair",
+    "chamber": "senate",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "T000476",
+   "govtrack": 412668,
+   "lis": "S384"
+  },
+  "name": {
+   "first": "Thom",
+   "last": "Tillis",
+   "official_full": "Thom Tillis"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "NC",
+    "class": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "NC",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "R000605",
+   "govtrack": 412669,
+   "lis": "S381"
+  },
+  "name": {
+   "first": "Mike",
+   "last": "Rounds",
+   "official_full": "Mike Rounds"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "SD",
+    "class": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "SD",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "K000393",
+   "govtrack": 412679,
+   "lis": "S389"
+  },
+  "name": {
+   "first": "John",
+   "last": "Kennedy",
+   "official_full": "John Kennedy"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "LA",
+    "class": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "LA",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "H001076",
+   "govtrack": 412680,
+   "lis": "S388"
+  },
+  "name": {
+   "first": "Margaret",
+   "last": "Hassan",
+   "official_full": "Margaret Wood Hassan"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "NH",
+    "class": 3,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "NH",
+    "class": 3,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "C001113",
+   "govtrack": 412681,
+   "lis": "S385"
+  },
+  "name": {
+   "first": "Catherine",
+   "last": "Cortez Masto",
+   "official_full": "Catherine Cortez Masto"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "NV",
+    "class": 3,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "NV",
+    "class": 3,
+    "party": "Democrat"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Senate Democratic Outreach Vice Chair",
+    "chamber": "senate",
+    "start": "2023-01-03",
+    "end": "2025-01-03"
+   },
+   {
+    "title": "Senate Democratic Outreach Vice Chair",
+    "chamber": "senate",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "B001303",
+   "lis": "S430",
+   "govtrack": 412689
+  },
+  "name": {
+   "first": "Lisa",
+   "last": "Blunt Rochester",
+   "official_full": "Lisa Blunt Rochester"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2023-01-03",
+    "end": "2025-01-03",
+    "state": "DE",
+    "district": 0,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "DE",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "B001299",
+   "lis": "S429",
+   "govtrack": 412702
+  },
+  "name": {
+   "first": "Jim",
+   "last": "Banks",
+   "official_full": "Jim Banks"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2023-01-03",
+    "end": "2025-01-03",
+    "state": "IN",
+    "district": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "IN",
+    "class": 1,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "M001198",
+   "lis": "S411",
+   "govtrack": 412704
+  },
+  "name": {
+   "first": "Roger",
+   "last": "Marshall",
+   "official_full": "Roger Marshall"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2019-01-03",
+    "end": "2021-01-03",
+    "state": "KS",
+    "district": 1,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "KS",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "J000299",
+   "govtrack": 412706
+  },
+  "name": {
+   "first": "Mike",
+   "last": "Johnson",
+   "official_full": "Mike Johnson"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2023-01-03",
+    "end": "2025-01-03",
+    "state": "LA",
+    "district": 4,
+    "party": "Republican"
+   },
+   {
+    "type": "rep",
+    "start": "2025-01-03",
+    "end": "2027-01-03",
+    "state": "LA",
+    "district": 4,
+    "party": "Republican"
+   }
+  ],
+  "leadership_roles": [
+   {
+    "title": "Speaker of the House",
+    "chamber": "house",
+    "start": "2023-10-25",
+    "end": "2025-01-03"
+   },
+   {
+    "title": "Speaker of the House",
+    "chamber": "house",
+    "start": "2025-01-03"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "B001305",
+   "lis": "S417",
+   "govtrack": 412712
+  },
+  "name": {
+   "first": "Ted",
+   "last": "Budd",
+   "official_full": "Ted Budd"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2021-01-03",
+    "end": "2023-01-03",
+    "state": "NC",
+    "district": 13,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "NC",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "R000608",
+   "lis": "S402",
+   "govtrack": 412715
+  },
+  "name": {
+   "first": "Jacky",
+   "last": "Rosen",
+   "official_full": "Jacky Rosen"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "NV",
+    "class": 1,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "NV",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "C001114",
+   "lis": "S431",
+   "govtrack": 412740
+  },
+  "name": {
+   "first": "John",
+   "last": "Curtis",
+   "official_full": "John R. Curtis"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2023-01-03",
+    "end": "2025-01-03",
+    "state": "UT",
+    "district": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "UT",
+    "class": 1,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "S001203",
+   "lis": "S394",
+   "govtrack": 412742
+  },
+  "name": {
+   "first": "Tina",
+   "last": "Smith",
+   "official_full": "Tina Smith"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2018-11-07",
+    "end": "2021-01-03",
+    "state": "MN",
+    "class": 2,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "MN",
+    "class": 2,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "H001079",
+   "lis": "S395",
+   "govtrack": 412743
+  },
+  "name": {
+   "first": "Cindy",
+   "last": "Hyde-Smith",
+   "official_full": "Cindy Hyde-Smith"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2018-11-28",
+    "end": "2021-01-03",
+    "state": "MS",
+    "class": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "MS",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "C001121",
+   "govtrack": 412762
+  },
+  "name": {
+   "first": "Jason",
+   "last": "Crow",
+   "official_full": "Jason Crow"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2023-01-03",
+    "end": "2025-01-03",
+    "state": "CO",
+    "district": 6,
+    "party": "Democrat"
+   },
+   {
+    "type": "rep",
+    "start": "2025-01-03",
+    "end": "2027-01-03",
+    "state": "CO",
+    "district": 6,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "S001208",
+   "lis": "S436",
+   "govtrack": 412784
+  },
+  "name": {
+   "first": "Elissa",
+   "last": "Slotkin",
+   "official_full": "Elissa Slotkin"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2023-01-03",
+    "end": "2025-01-03",
+    "state": "MI",
+    "district": 7,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "MI",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "K000394",
+   "lis": "S426",
+   "govtrack": 412797
+  },
+  "name": {
+   "first": "Andy",
+   "last": "Kim",
+   "official_full": "Andy Kim"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2024-12-09",
+    "end": "2025-01-03",
+    "state": "NJ",
+    "class": 1,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "NJ",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "S001217",
+   "lis": "S404",
+   "govtrack": 412838
+  },
+  "name": {
+   "first": "Rick",
+   "last": "Scott",
+   "official_full": "Rick Scott"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-08",
+    "end": "2025-01-03",
+    "state": "FL",
+    "class": 1,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "FL",
+    "class": 1,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "H001089",
+   "govtrack": 412840,
+   "lis": "S399"
+  },
+  "name": {
+   "first": "Joshua",
+   "last": "Hawley",
+   "official_full": "Josh Hawley"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "MO",
+    "class": 1,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "MO",
+    "class": 1,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "K000377",
+   "lis": "S406",
+   "govtrack": 456794
+  },
+  "name": {
+   "first": "Mark",
+   "last": "Kelly",
+   "official_full": "Mark Kelly"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2020-12-02",
+    "end": "2023-01-03",
+    "state": "AZ",
+    "class": 3,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "AZ",
+    "class": 3,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "L000571",
+   "lis": "S410",
+   "govtrack": 412294
+  },
+  "name": {
+   "first": "Cynthia",
+   "last": "Lummis",
+   "official_full": "Cynthia M. Lummis"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2015-01-06",
+    "end": "2017-01-03",
+    "state": "WY",
+    "party": "Republican",
+    "district": 0
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "WY",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "T000278",
+   "lis": "S412",
+   "govtrack": 456796
+  },
+  "name": {
+   "first": "Tommy",
+   "last": "Tuberville",
+   "official_full": "Tommy Tuberville"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "AL",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "H000273",
+   "lis": "S408",
+   "govtrack": 456797
+  },
+  "name": {
+   "first": "John",
+   "last": "Hickenlooper",
+   "official_full": "John W. Hickenlooper"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "CO",
+    "class": 2,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "H000601",
+   "lis": "S407",
+   "govtrack": 456798
+  },
+  "name": {
+   "first": "Bill",
+   "last": "Hagerty",
+   "official_full": "Bill Hagerty"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2027-01-03",
+    "state": "TN",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "P000145",
+   "lis": "S413",
+   "govtrack": 456856
+  },
+  "name": {
+   "first": "Alejandro",
+   "last": "Padilla",
+   "official_full": "Alex Padilla"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2022-12-22",
+    "end": "2023-01-03",
+    "state": "CA",
+    "class": 3,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "CA",
+    "class": 3,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "O000174",
+   "lis": "S414",
+   "govtrack": 456857
+  },
+  "name": {
+   "first": "Jon",
+   "last": "Ossoff",
+   "official_full": "Jon Ossoff"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2021-01-20",
+    "end": "2027-01-03",
+    "state": "GA",
+    "class": 2,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "W000790",
+   "lis": "S415",
+   "govtrack": 456858
+  },
+  "name": {
+   "first": "Raphael",
+   "last": "Warnock",
+   "official_full": "Raphael G. Warnock"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2021-01-20",
+    "end": "2023-01-03",
+    "state": "GA",
+    "class": 3,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "GA",
+    "class": 3,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "B001319",
+   "lis": "S416",
+   "govtrack": 456874
+  },
+  "name": {
+   "first": "Katie",
+   "last": "Britt",
+   "official_full": "Katie Boyd Britt"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "AL",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "S001227",
+   "lis": "S420",
+   "govtrack": 456875
+  },
+  "name": {
+   "first": "Eric",
+   "last": "Schmitt",
+   "official_full": "Eric Schmitt"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "MO",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "F000479",
+   "lis": "S418",
+   "govtrack": 456877
+  },
+  "name": {
+   "first": "John",
+   "last": "Fetterman",
+   "official_full": "John Fetterman"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2029-01-03",
+    "state": "PA",
+    "class": 3,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "K000401",
+   "govtrack": 456881
+  },
+  "name": {
+   "first": "Kevin",
+   "last": "Kiley",
+   "official_full": "Kevin Kiley"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2023-01-03",
+    "end": "2025-01-03",
+    "state": "CA",
+    "district": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "rep",
+    "start": "2025-01-03",
+    "end": "2027-01-03",
+    "state": "CA",
+    "district": 3,
+    "party": "Independent",
+    "caucus": "Republican",
+    "party_affiliations": [
+     {
+      "start": "2025-01-03",
+      "end": "2026-03-08",
+      "party": "Republican"
+     },
+     {
+      "start": "2026-03-09",
+      "end": "2027-01-03",
+      "party": "Independent",
+      "caucus": "Republican"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "R000618",
+   "lis": "S423",
+   "govtrack": 456952
+  },
+  "name": {
+   "first": "Pete",
+   "last": "Ricketts",
+   "official_full": "Pete Ricketts"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2023-01-23",
+    "end": "2024-11-05",
+    "state": "NE",
+    "class": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2024-11-05",
+    "end": "2027-01-03",
+    "state": "NE",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "A000382",
+   "lis": "S428",
+   "govtrack": 456965
+  },
+  "name": {
+   "first": "Angela",
+   "last": "Alsobrooks",
+   "official_full": "Angela D. Alsobrooks"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "MD",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "S001232",
+   "lis": "S435",
+   "govtrack": 456966
+  },
+  "name": {
+   "first": "Tim",
+   "last": "Sheehy",
+   "official_full": "Tim Sheehy"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "MT",
+    "class": 1,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "M001242",
+   "lis": "S434",
+   "govtrack": 456967
+  },
+  "name": {
+   "first": "Bernie",
+   "last": "Moreno",
+   "official_full": "Bernie Moreno"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "OH",
+    "class": 1,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "M001243",
+   "lis": "S433",
+   "govtrack": 456968
+  },
+  "name": {
+   "first": "Dave",
+   "last": "McCormick",
+   "official_full": "David McCormick"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2025-01-03",
+    "end": "2031-01-03",
+    "state": "PA",
+    "class": 1,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "J000312",
+   "lis": "S437",
+   "govtrack": 456969
+  },
+  "name": {
+   "first": "Jim",
+   "last": "Justice",
+   "official_full": "James C. Justice"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2025-01-14",
+    "end": "2031-01-03",
+    "state": "WV",
+    "class": 1,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "H001104",
+   "lis": "S438",
+   "govtrack": 457032
+  },
+  "name": {
+   "first": "Jon",
+   "last": "Husted",
+   "official_full": "Jon Husted"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2025-01-21",
+    "end": "2026-11-03",
+    "state": "OH",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "M001244",
+   "lis": "S439",
+   "govtrack": 457033
+  },
+  "name": {
+   "first": "Ashley",
+   "last": "Moody",
+   "official_full": "Ashley Moody"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2025-01-21",
+    "end": "2026-11-03",
+    "state": "FL",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "A000383",
+   "lis": "S440",
+   "govtrack": 457040
+  },
+  "name": {
+   "first": "Alan",
+   "last": "Armstrong",
+   "official_full": "Alan Armstrong"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2026-03-24",
+    "end": "2027-01-03",
+    "state": "OK",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "G000608",
+   "lis": "S441",
+   "govtrack": 457044
+  },
+  "name": {
+   "first": "Darline",
+   "last": "Graham Nordone",
+   "official_full": "Darline Graham"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2026-07-14",
+    "end": "2027-01-03",
+    "state": "SC",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ }
+]

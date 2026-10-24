@@ -1,0 +1,76 @@
+{
+    "bill": {
+        "actions": {
+            "count": 12,
+            "url": "https://api.congress.gov/v3/bill/119/hres/682/actions?format=json"
+        },
+        "committeeReports": [
+            {
+                "citation": "H. Rept. 119-255",
+                "url": "https://api.congress.gov/v3/committee-report/119/HRPT/255?format=json"
+            }
+        ],
+        "committees": {
+            "count": 1,
+            "url": "https://api.congress.gov/v3/bill/119/hres/682/committees?format=json"
+        },
+        "congress": 119,
+        "introducedDate": "2025-09-09",
+        "latestAction": {
+            "actionDate": "2025-09-09",
+            "actionTime": "14:10:41",
+            "text": "Motion to reconsider laid on the table Agreed to without objection."
+        },
+        "legislationUrl": "https://www.congress.gov/bill/119th-congress/house-resolution/682",
+        "number": "682",
+        "originChamber": "House",
+        "originChamberCode": "H",
+        "policyArea": {
+            "name": "Congress"
+        },
+        "relatedBills": {
+            "count": 4,
+            "url": "https://api.congress.gov/v3/bill/119/hres/682/relatedbills?format=json"
+        },
+        "sponsors": [
+            {
+                "bioguideId": "S001189",
+                "district": 8,
+                "firstName": "Austin",
+                "fullName": "Rep. Scott, Austin [R-GA-8]",
+                "isByRequest": "N",
+                "lastName": "Scott",
+                "party": "R",
+                "state": "GA",
+                "url": "https://api.congress.gov/v3/member/S001189?format=json"
+            }
+        ],
+        "subjects": {
+            "count": 3,
+            "url": "https://api.congress.gov/v3/bill/119/hres/682/subjects?format=json"
+        },
+        "summaries": {
+            "count": 1,
+            "url": "https://api.congress.gov/v3/bill/119/hres/682/summaries?format=json"
+        },
+        "textVersions": {
+            "count": 2,
+            "url": "https://api.congress.gov/v3/bill/119/hres/682/text?format=json"
+        },
+        "title": "Providing for consideration of the bill (H.R. 3838) to authorize appropriations for fiscal year 2026 for military activities of the Department of Defense, for military construction, and for defense activities of the Department of Energy, to prescribe military personnel strengths for such fiscal year, and for other purposes, and providing for consideration of the bill (H.R. 3486) to amend the Immigration and Nationality Act to increase penalties for individuals who illegally enter and reenter the United States after being removed, and for other purposes.",
+        "titles": {
+            "count": 3,
+            "url": "https://api.congress.gov/v3/bill/119/hres/682/titles?format=json"
+        },
+        "type": "HRES",
+        "updateDate": "2026-07-11T20:39:31Z",
+        "updateDateIncludingText": "2026-07-19T00:23:59Z"
+    },
+    "request": {
+        "billNumber": "682",
+        "billType": "hres",
+        "congress": "119",
+        "contentType": "application/json",
+        "format": "json"
+    }
+}

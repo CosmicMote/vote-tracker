@@ -1,0 +1,8 @@
+{
+  "cosponsors": [
+    {"bioguideId": "Z000001", "district": 9, "firstName": "Example", "fullName": "Rep. Member, Example [D-ZZ-9]", "isOriginalCosponsor": true, "lastName": "Member", "party": "D", "sponsorshipDate": "2025-06-02", "state": "ZZ", "url": "https://api.congress.gov/v3/member/Z000001?format=json"},
+    {"bioguideId": "D000197", "district": 1, "firstName": "Diana", "fullName": "Rep. DeGette, Diana [D-CO-1]", "isOriginalCosponsor": false, "lastName": "DeGette", "party": "D", "sponsorshipDate": "2025-11-12", "state": "CO", "url": "https://api.congress.gov/v3/member/D000197?format=json"}
+  ],
+  "pagination": {"count": 2},
+  "request": {"billNumber": "9002", "billType": "hr", "congress": "119", "contentType": "application/json", "format": "json"}
+}

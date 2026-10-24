@@ -1,0 +1,80 @@
+# Copy to config.toml and edit. Secrets never go here; they come from environment variables:
+#   CONGRESS_GOV_API_KEY  (free key from https://api.congress.gov/sign-up/)
+#   ANTHROPIC_API_KEY     (only when llm.provider = "anthropic")
+#   SMTP_PASSWORD         (only when email.enabled = true)
+
+[members]
+# Bioguide IDs; chamber and LIS ID are resolved from the crosswalk.
+# Colorado: Rep. Diana DeGette (CO-1, replace with your own representative),
+# Sen. Michael Bennet, Sen. John Hickenlooper.
+tracked = ["D000197", "B001267", "H000273"]
+
+[congress]
+number = 119
+
+[http]
+user_agent = "vote-tracker/0.1 (personal use; you@example.com)"
+min_interval_seconds = 1.0     # per host
+timeout_seconds = 30.0
+max_attempts = 5               # retries 429 and 5xx, honoring Retry-After
+
+[llm]
+provider = "ollama"            # or "anthropic"
+model = "llama3.1:8b"          # for anthropic, e.g. "claude-opus-5-5"
+base_url = "http://localhost:11434"
+max_input_chars = 24000        # cap on bill text sent when no CRS summary exists
+prompt_version = "v1"          # bump to regenerate summaries lazily
+effort = "low"                 # anthropic only: output_config.effort
+fallbacks = "default"          # anthropic only: server-side refusal fallback; "" to disable
+
+[digest]
+top_n = 10                     # scored votes per member, in addition to all party breaks
+missed_vote_min_score = 1.0    # missed votes at or above this are listed individually
+output_dir = "./digests"
+timezone = "America/Denver"
+
+[email]
+enabled = false
+smtp_host = "smtp.example.com"
+smtp_port = 587
+# smtp_user = "tracker@example.com"   # defaults to from_addr
+from_addr = "tracker@example.com"
+to_addr = "me@example.com"
+
+[storage]
+db_path = "./tracker.db"
+log_dir = "./logs"
+crosswalk_max_age_days = 7     # refresh congress-legislators weekly
+corrections_window_days = 14   # re-fetch votes this recent to pick up corrections
+# crosswalk_historical_url = ""  # disable mapping of former members (not recommended)
+
+[scoring]                      # every weight and threshold below is a default; override any
+party_break_bonus = 1.5
+sponsor_bonus = 0.5
+tie_breaker_bonus = 0.5
+break_min_cohesion = 0.80      # a break only counts against a caucus at least this united
+break_min_caucus_size = 5      # skip break detection for smaller caucuses
+lopsided_share = 0.95          # votes with a yea share above this (or below 1 - this) are excluded
+contested_cohesion = 0.95      # "contested" votes for the caucus-agreement stat
+
+[scoring.topic_boost]          # Congress.gov policy area -> added score; empty by default
+# "Public Lands and Natural Resources" = 0.3
+
+[scoring.base_weights]         # per vote_class; unlisted classes keep their defaults
+# veto_override = 1.2
+# impeachment = 1.2
+# speaker = 1.2
+# final = 1.1
+# passage = 1.0
+# ratification = 1.0
+# cloture = 0.9
+# nomination = 0.8
+# amendment = 0.6
+# rule = 0.5
+# motion_to_proceed = 0.5
+# procedural = 0.5
+# recommit = 0.4
+# table = 0.4
+# suspension = 0.3
+# housekeeping = 0.0
+# other = 0.2

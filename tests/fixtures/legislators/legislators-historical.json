@@ -1,0 +1,426 @@
+[
+ {
+  "id": {
+   "bioguide": "B000944",
+   "lis": "S307",
+   "govtrack": 400050
+  },
+  "name": {
+   "first": "Sherrod",
+   "last": "Brown",
+   "official_full": "Sherrod Brown"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2013-01-03",
+    "end": "2019-01-03",
+    "state": "OH",
+    "party": "Democrat",
+    "class": 1
+   },
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "OH",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "C000141",
+   "lis": "S308",
+   "govtrack": 400064
+  },
+  "name": {
+   "first": "Benjamin",
+   "last": "Cardin",
+   "official_full": "Benjamin L. Cardin"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2013-01-03",
+    "end": "2019-01-03",
+    "state": "MD",
+    "party": "Democrat",
+    "class": 1
+   },
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "MD",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "C000174",
+   "lis": "S277",
+   "govtrack": 300019
+  },
+  "name": {
+   "first": "Thomas",
+   "last": "Carper",
+   "official_full": "Thomas R. Carper"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2013-01-03",
+    "end": "2019-01-03",
+    "state": "DE",
+    "party": "Democrat",
+    "class": 1
+   },
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "DE",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "C001070",
+   "lis": "S309",
+   "govtrack": 412246
+  },
+  "name": {
+   "first": "Robert",
+   "last": "Casey",
+   "official_full": "Robert P. Casey, Jr."
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2013-01-03",
+    "end": "2019-01-03",
+    "state": "PA",
+    "party": "Democrat",
+    "class": 1
+   },
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "PA",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "S000770",
+   "lis": "S284",
+   "govtrack": 300093
+  },
+  "name": {
+   "first": "Debbie",
+   "last": "Stabenow",
+   "official_full": "Debbie Stabenow"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2013-01-03",
+    "end": "2019-01-03",
+    "state": "MI",
+    "party": "Democrat",
+    "class": 1
+   },
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "MI",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "T000464",
+   "lis": "S314",
+   "govtrack": 412244
+  },
+  "name": {
+   "first": "Jon",
+   "last": "Tester",
+   "official_full": "Jon Tester"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2013-01-03",
+    "end": "2019-01-03",
+    "state": "MT",
+    "party": "Democrat",
+    "class": 1
+   },
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "MT",
+    "class": 1,
+    "party": "Democrat"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "M001183",
+   "lis": "S338",
+   "govtrack": 412391
+  },
+  "name": {
+   "first": "Joe",
+   "last": "Manchin",
+   "official_full": "Joe Manchin, III"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2013-01-03",
+    "end": "2019-01-03",
+    "state": "WV",
+    "party": "Democrat",
+    "class": 1
+   },
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "WV",
+    "class": 1,
+    "party": "Independent",
+    "caucus": "Democrat",
+    "party_affiliations": [
+     {
+      "start": "2019-01-03",
+      "end": "2024-05-31",
+      "party": "Democrat"
+     },
+     {
+      "start": "2024-05-31",
+      "end": "2025-01-03",
+      "party": "Independent",
+      "caucus": "Democrat"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": {
+   "govtrack": 412509,
+   "bioguide": "S001191",
+   "lis": "S403"
+  },
+  "name": {
+   "first": "Kyrsten",
+   "last": "Sinema",
+   "official_full": "Kyrsten Sinema"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2017-01-03",
+    "end": "2019-01-03",
+    "state": "AZ",
+    "district": 9,
+    "party": "Democrat"
+   },
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "AZ",
+    "class": 1,
+    "party": "Independent",
+    "caucus": "Democrat",
+    "party_affiliations": [
+     {
+      "start": "2019-01-03",
+      "end": "2022-12-08",
+      "party": "Democrat"
+     },
+     {
+      "start": "2022-12-09",
+      "end": "2025-01-03",
+      "party": "Independent",
+      "caucus": "Democrat"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "B001310",
+   "govtrack": 412839,
+   "lis": "S397"
+  },
+  "name": {
+   "first": "Mike",
+   "last": "Braun",
+   "official_full": "Mike Braun"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "IN",
+    "class": 1,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "R000615",
+   "govtrack": 412841,
+   "lis": "S401"
+  },
+  "name": {
+   "first": "Mitt",
+   "last": "Romney",
+   "official_full": "Mitt Romney"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2019-01-03",
+    "end": "2025-01-03",
+    "state": "UT",
+    "class": 1,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "V000137",
+   "lis": "S421",
+   "govtrack": 456876
+  },
+  "name": {
+   "first": "James David",
+   "last": "Vance",
+   "official_full": "J.D. Vance"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2025-01-09",
+    "state": "OH",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "R000595",
+   "lis": "S350",
+   "govtrack": 412491
+  },
+  "name": {
+   "first": "Marco",
+   "last": "Rubio",
+   "official_full": "Marco Rubio"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2017-01-03",
+    "end": "2023-01-03",
+    "state": "FL",
+    "class": 3,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2025-01-20",
+    "state": "FL",
+    "class": 3,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "govtrack": 412568,
+   "bioguide": "M001190",
+   "lis": "S419"
+  },
+  "name": {
+   "first": "Markwayne",
+   "last": "Mullin",
+   "official_full": "Markwayne Mullin"
+  },
+  "terms": [
+   {
+    "type": "rep",
+    "start": "2021-01-03",
+    "end": "2023-01-03",
+    "state": "OK",
+    "district": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2023-01-03",
+    "end": "2026-03-23",
+    "state": "OK",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ },
+ {
+  "id": {
+   "bioguide": "G000359",
+   "lis": "S293",
+   "govtrack": 300047
+  },
+  "name": {
+   "first": "Lindsey",
+   "last": "Graham",
+   "official_full": "Lindsey Graham"
+  },
+  "terms": [
+   {
+    "type": "sen",
+    "start": "2015-01-06",
+    "end": "2021-01-03",
+    "state": "SC",
+    "class": 2,
+    "party": "Republican"
+   },
+   {
+    "type": "sen",
+    "start": "2021-01-03",
+    "end": "2026-07-11",
+    "state": "SC",
+    "class": 2,
+    "party": "Republican"
+   }
+  ]
+ }
+]

@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+config.toml
+*.db
+*.db-journal
+digests/
+logs/

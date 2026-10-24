@@ -1,0 +1,9 @@
+{
+  "pagination": {"count": 3},
+  "request": {"bioguideId": "D000197", "contentType": "application/json", "format": "json"},
+  "sponsoredLegislation": [
+    {"congress": 119, "introducedDate": "2025-11-12", "latestAction": {"actionDate": "2025-11-12", "text": "Referred to the House Committee on Energy and Commerce."}, "number": "9001", "policyArea": {"name": "Health"}, "title": "Example Clinic Access Act", "type": "HR", "url": "https://api.congress.gov/v3/bill/119/hr/9001?format=json"},
+    {"amendmentNumber": "9", "congress": 119, "introducedDate": "2025-11-13", "latestAction": {"actionDate": "2025-11-13", "text": "Amendment offered."}, "url": "https://api.congress.gov/v3/amendment/119/hamdt/9?format=json"},
+    {"congress": 118, "introducedDate": "2024-03-01", "latestAction": {"actionDate": "2024-03-01", "text": "Referred."}, "number": "9100", "policyArea": {"name": "Health"}, "title": "Example Older Act", "type": "HR", "url": "https://api.congress.gov/v3/bill/118/hr/9100?format=json"}
+  ]
+}

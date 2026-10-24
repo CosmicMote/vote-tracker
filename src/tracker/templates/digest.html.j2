@@ -1,0 +1,138 @@
+{#- Weekly delegation digest. Inline style attributes only, so it renders the same in a browser and an email client. -#}
+{%- set FONT = "font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;" -%}
+{%- set MUTED = "color:#5b6470;" -%}
+{%- set H2 = "font-size:20px;margin:28px 0 4px 0;padding-top:16px;border-top:2px solid #1f2937;color:#111827;" -%}
+{%- set H3 = "font-size:15px;margin:20px 0 6px 0;color:#1f2937;text-transform:uppercase;letter-spacing:0.04em;" -%}
+{%- set ITEM = "margin:0 0 16px 0;padding:12px 14px;border:1px solid #e5e7eb;border-radius:6px;background:#ffffff;" -%}
+{%- set LINK = "color:#1d4ed8;text-decoration:underline;" -%}
+
+{%- macro bill_summary(b) -%}
+  {%- if b.see_above %}
+  <p style="margin:6px 0;font-size:14px;{{ MUTED }}">{{ b.number }}: see the <a href="#{{ b.see_above }}" style="{{ LINK }}">summary above</a>.</p>
+  {%- else %}
+  <div{% if b.anchor %} id="{{ b.anchor }}"{% endif %} style="margin:6px 0;">
+    {%- if b.bullets %}
+    <ul style="margin:6px 0 6px 20px;padding:0;font-size:14px;line-height:1.45;color:#111827;">
+      {%- for bullet in b.bullets %}
+      <li style="margin:2px 0;">{{ bullet }}</li>
+      {%- endfor %}
+    </ul>
+    {%- elif b.excerpt %}
+    <p style="margin:6px 0;font-size:14px;line-height:1.45;color:#111827;">{{ b.excerpt }}</p>
+    {%- elif b.official_title %}
+    <p style="margin:6px 0;font-size:14px;line-height:1.45;color:#111827;">{{ b.official_title }}</p>
+    {%- endif %}
+    {%- if b.caveat %}
+    <p style="margin:4px 0;font-size:13px;font-style:italic;{{ MUTED }}">Note: {{ b.caveat }}</p>
+    {%- endif %}
+    <p style="margin:4px 0;font-size:12px;{{ MUTED }}">{{ b.provenance }} · <a href="{{ b.url }}" style="{{ LINK }}">{{ b.number }} on Congress.gov</a></p>
+  </div>
+  {%- endif %}
+{%- endmacro -%}
+
+{%- macro vote_item(item) -%}
+<div style="{{ ITEM }}">
+  <h4 style="margin:0 0 4px 0;font-size:16px;color:#111827;">{{ item.heading }}{% if item.number %} <span style="font-weight:normal;{{ MUTED }}">({{ item.number }})</span>{% endif %}</h4>
+  {%- for b in item.bills %}
+  {{ bill_summary(b) }}
+  {%- endfor %}
+  {%- for v in item.votes %}
+  <p style="margin:8px 0 0 0;font-size:14px;line-height:1.45;color:#111827;">
+    {%- for line in v.context %}{{ line }}{% if not loop.last %}<br>{% endif %}{% endfor %}
+    <br><span style="font-size:12px;{{ MUTED }}">{{ v.date }} · <a href="{{ v.roll_url }}" style="{{ LINK }}">{{ v.roll_label }}</a></span>
+  </p>
+  {%- endfor %}
+  {%- if item.positions %}
+  <p style="margin:8px 0 0 0;font-size:14px;font-weight:600;color:#111827;">{{ item.positions | join(" · ") }}</p>
+  {%- endif %}
+</div>
+{%- endmacro -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ subject }}</title>
+</head>
+<body style="margin:0;padding:0;background:#f3f4f6;{{ FONT }}">
+<div style="max-width:720px;margin:0 auto;padding:24px 16px;background:#f3f4f6;">
+  <h1 style="font-size:24px;margin:0 0 4px 0;color:#111827;">Your congressional delegation</h1>
+  <p style="margin:0 0 12px 0;font-size:14px;{{ MUTED }}">Week of {{ week_label }}</p>
+  {%- for warning in stale %}
+  <p style="margin:8px 0;padding:8px 12px;font-size:14px;background:#fef3c7;border:1px solid #f59e0b;border-radius:4px;color:#78350f;">{{ warning }}</p>
+  {%- endfor %}
+  <p style="margin:0 0 8px 0;font-size:14px;color:#111827;">
+    {%- for m in members %}<a href="#{{ m.anchor }}" style="{{ LINK }}">{{ m.title }} {{ m.name }} ({{ m.label }})</a>{% if not loop.last %} · {% endif %}{% endfor %}
+  </p>
+
+  {%- if splits %}
+  <h2 style="{{ H2 }}">Delegation splits</h2>
+  <p style="margin:0 0 10px 0;font-size:14px;{{ MUTED }}">Senate votes where your two senators voted opposite ways.</p>
+  {%- for item in splits %}
+  {{ vote_item(item) }}
+  {%- endfor %}
+  {%- endif %}
+
+  {%- for m in members %}
+  <h2 id="{{ m.anchor }}" style="{{ H2 }}">{{ m.title }} {{ m.name }} <span style="font-weight:normal;font-size:16px;{{ MUTED }}">({{ m.label }})</span></h2>
+  <p style="margin:0 0 8px 0;font-size:14px;color:#111827;">
+    {{ m.stats.cast }} vote{{ "" if m.stats.cast == 1 else "s" }} cast{% if m.stats.present %} ({{ m.stats.present }} Present){% endif %} ·
+    {{ m.stats.missed }} missed ·
+    {%- if m.stats.contested %} agreed with caucus on {{ m.stats.agreed }} of {{ m.stats.contested }} contested vote{{ "" if m.stats.contested == 1 else "s" }}
+    {%- else %} no contested votes{% endif %}
+  </p>
+
+  <h3 style="{{ H3 }}">Breaks from party</h3>
+  {%- if m.breaks %}
+  {%- for item in m.breaks %}
+  {{ vote_item(item) }}
+  {%- endfor %}
+  {%- else %}
+  <p style="margin:0 0 8px 0;font-size:14px;{{ MUTED }}">No breaks from party this week.</p>
+  {%- endif %}
+
+  <h3 style="{{ H3 }}">Notable votes</h3>
+  {%- if m.notable %}
+  {%- for item in m.notable %}
+  {{ vote_item(item) }}
+  {%- endfor %}
+  {%- else %}
+  <p style="margin:0 0 8px 0;font-size:14px;{{ MUTED }}">No notable votes this week.</p>
+  {%- endif %}
+
+  <h3 style="{{ H3 }}">Missed votes</h3>
+  {%- if m.is_speaker %}
+  <p style="margin:0 0 8px 0;font-size:14px;{{ MUTED }}">Not shown: by custom the Speaker of the House rarely votes.</p>
+  {%- elif m.missed_count %}
+  <p style="margin:0 0 8px 0;font-size:14px;color:#111827;">Missed {{ m.missed_count }} vote{{ "" if m.missed_count == 1 else "s" }} this week{% if m.missed_listed %}, including:{% else %}.{% endif %}</p>
+  {%- for item in m.missed_listed %}
+  {{ vote_item(item) }}
+  {%- endfor %}
+  {%- else %}
+  <p style="margin:0 0 8px 0;font-size:14px;{{ MUTED }}">No missed votes this week.</p>
+  {%- endif %}
+
+  <h3 style="{{ H3 }}">Introduced and cosponsored</h3>
+  {%- if m.sponsorships %}
+  <table role="presentation" style="width:100%;border-collapse:collapse;font-size:14px;">
+    {%- for s in m.sponsorships %}
+    <tr>
+      <td style="padding:4px 8px 4px 0;vertical-align:top;white-space:nowrap;{{ MUTED }}">{{ s.date }}</td>
+      <td style="padding:4px 8px 4px 0;vertical-align:top;white-space:nowrap;{{ MUTED }}">{{ s.role }}</td>
+      <td style="padding:4px 0;vertical-align:top;color:#111827;"><a href="{{ s.url }}" style="{{ LINK }}">{{ s.number }}</a> {{ s.plain_title }}</td>
+    </tr>
+    {%- endfor %}
+  </table>
+  {%- else %}
+  <p style="margin:0 0 8px 0;font-size:14px;{{ MUTED }}">No bills introduced or cosponsored this week.</p>
+  {%- endif %}
+  {%- endfor %}
+
+  <div style="margin-top:32px;padding-top:12px;border-top:1px solid #d1d5db;font-size:12px;line-height:1.5;{{ MUTED }}">
+    <p style="margin:4px 0;">Bill summaries are written by a language model from the Congressional Research Service summary or, when none exists yet, the bill text (prompt {{ prompt_version }}); each summary is labeled with its source. Vote descriptions, counts and caucus comparisons are computed directly from the official records, not by the model.</p>
+    <p style="margin:4px 0;">Only recorded roll-call votes are covered. Voice votes and unanimous consent leave no record of individual positions and are not included; in the Senate that covers many confirmations and much routine business.</p>
+    <p style="margin:4px 0;">Data as of:{% for a in as_of %} {{ a.source }}, {{ a.at }}{% if not loop.last %};{% else %}.{% endif %}{% endfor %}</p>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "pagination": {"count": 1},
+  "request": {"bioguideId": "D000197", "contentType": "application/json", "format": "json"},
+  "cosponsoredLegislation": [
+    {"congress": 119, "introducedDate": "2025-06-02", "latestAction": {"actionDate": "2025-11-14", "text": "Referred to the Subcommittee on Water Resources."}, "number": "9002", "policyArea": {"name": "Water Resources Development"}, "title": "Example Watershed Restoration Act", "type": "HR", "url": "https://api.congress.gov/v3/bill/119/hr/9002?format=json"}
+  ]
+}
