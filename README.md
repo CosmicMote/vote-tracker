@@ -133,6 +133,58 @@ So turning on Email → Enabled is all it takes to start getting the digest ever
 - **One attempt per scheduled time.** A failure (for example, a wrong SMTP password) shows on the Admin tab and in `logs/tracker.log` instead of retrying every 30 seconds. Fix the setting, then use "Send last week's digest now".
 - **Nothing runs while the server is stopped.** Keep `tracker serve` running (for example as a login item), or keep the cron lines above.
 
+### Sending the digest from a Gmail account
+
+Gmail works as the SMTP server. You send from your own Gmail account, usually to yourself.
+
+**1. Create an app password.** Gmail rejects your normal password over SMTP; it needs an *app password*, a separate 16-character password for one app.
+
+1. Turn on [2-Step Verification](https://myaccount.google.com/signinoptions/two-step-verification) for the Google account, if it isn't on already. App passwords require it.
+2. Open <https://myaccount.google.com/apppasswords>, create one named, say, "vote-tracker", and copy it. Google shows it only once.
+
+If that page says app passwords aren't available, the account is probably a Google Workspace account whose administrator has turned them off, or it uses Advanced Protection. Use another SMTP provider in that case.
+
+**2. Fill in Admin → Email:**
+
+| Setting | Value |
+| --- | --- |
+| Enabled | ✓ |
+| Smtp host | `smtp.gmail.com` |
+| Smtp port | `587` (STARTTLS, which the tracker uses) |
+| Smtp user | your Gmail address, or leave blank to use From addr |
+| From addr | your Gmail address. Gmail sends as the account you log in with, whatever this says |
+| To addr | where the digest should go, e.g. the same address |
+
+Or in `config.toml`:
+
+```toml
+[email]
+enabled = true
+smtp_host = "smtp.gmail.com"
+smtp_port = 587
+from_addr = "you@gmail.com"
+to_addr = "you@gmail.com"
+```
+
+**3. Give the server the app password** in the `SMTP_PASSWORD` environment variable. It is never stored in `config.toml` or shown in the UI. The variable is read when the server starts, so restart it after setting it.
+
+- Running `tracker serve` directly: `export SMTP_PASSWORD='abcdefghijklmnop'` in the shell that starts it. Enter the 16 letters without the spaces Google shows between groups of four.
+- In Docker: re-create the container with `-e SMTP_PASSWORD=...`. Environment variables are fixed when a container is created; your data stays in the volume. See [Running in Docker](#running-in-docker).
+- For cron: put `export SMTP_PASSWORD=...` in the `.env` file the cron lines load.
+
+**4. Test it.** On the Admin tab, "Schedule & email" shows any setting that is still missing. Once none are, "Send last week's digest now" sends a test. Its result appears under Data, and an SMTP error appears in the log (`logs/tracker.log`, or `docker logs`). To test with a week that has more in it, send a specific week from the command line:
+
+```bash
+uv run tracker digest --week 2026-09-14 --send          # or: docker exec <container> tracker digest --week ... --send
+```
+
+Things to know:
+
+- **Check your spam folder** the first time. Mail an account sends to itself over SMTP sometimes lands there; marking it "Not spam" fixes that.
+- **A test send counts as that week's digest,** so the schedule won't send that week again. The next scheduled email covers the following week, so it isn't affected.
+- **`535 Username and Password not accepted`** means Gmail rejected the login. Check that `SMTP_PASSWORD` holds the app password (not your account password), that the server was restarted after setting it, and that Smtp user (or From addr) is the account the app password belongs to.
+- **Revoking access:** delete the app password on the same Google page. Nothing else on the account changes.
+
 **How it is put together.**
 - `src/tracker/pipeline.py` holds the stage functions. The CLI and the web app share them, so both write the same `run_log` rows.
 - `src/tracker/web/jobs.py` runs background work on a single worker thread, so stages never overlap. A job that is already queued or running is not queued again.
@@ -405,7 +457,7 @@ Everything lives in `config.toml`; see [config.example.toml](config.example.toml
 | `[senate]` | `source` (`voteview` or `senate_gov`), `voteview_url` |
 | `[llm]` | `provider`, `model`, `base_url`, `max_input_chars`, `prompt_version`, `effort`, `fallbacks` |
 | `[digest]` | `top_n`, `missed_vote_min_score`, `output_dir`, `timezone` |
-| `[email]` | `enabled` (turns on the weekly email), `smtp_host`, `smtp_port`, `smtp_user`, `from_addr`, `to_addr` |
+| `[email]` | `enabled` (turns on the weekly email), `smtp_host`, `smtp_port`, `smtp_user`, `from_addr`, `to_addr`. For Gmail, see [Sending the digest from a Gmail account](#sending-the-digest-from-a-gmail-account) |
 | `[schedule]` | `update_daily_at`, `digest_weekday`, `digest_at` (used by `tracker serve`) |
 | `[storage]` | `db_path`, `log_dir`, `crosswalk_url`, `crosswalk_historical_url`, `crosswalk_max_age_days`, `corrections_window_days` |
 | `[scoring]` | `party_break_bonus`, `sponsor_bonus`, `tie_breaker_bonus`, `break_min_cohesion`, `break_min_caucus_size`, `lopsided_share`, `contested_cohesion`, `[scoring.base_weights]`, `[scoring.topic_boost]` |
