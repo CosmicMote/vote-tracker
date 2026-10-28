@@ -168,3 +168,40 @@ def test_unresolvable_tracked_member_fails_fast(respx_mock, conn, settings, sour
     settings.members.tracked = ["X000000"]
     with pytest.raises(CrosswalkError):
         run_ingest(conn, settings, sources, now=datetime(2025, 12, 25, tzinfo=UTC))
+
+
+@respx.mock
+def test_ingest_never_holds_the_write_lock_during_downloads(tmp_path, settings):
+    """Other writers (the web app analyzing a week) must never wait behind a download."""
+    import sqlite3
+
+    from tracker.ingest import IngestResult, ingest_members
+    from tracker.sources.legislators import Person
+
+    path = tmp_path / "lock.db"
+    conn = db.connect(path)
+    db.init_db(conn)
+    blocked = []
+
+    def page(request):
+        # Mid-ingest, another connection writes with no willingness to wait at all.
+        other = sqlite3.connect(path, timeout=0)
+        try:
+            other.execute("INSERT INTO run_log (command, started_at) VALUES ('probe', 'now')")
+            other.commit()
+        except sqlite3.OperationalError as e:
+            blocked.append(str(e))
+        finally:
+            other.close()
+        offset = int(request.url.params.get("offset", 0))
+        nxt = {"next": "more"} if offset < 500 else {}
+        return httpx.Response(200, json={"cosponsoredLegislation": [], "sponsoredLegislation": [], "pagination": nxt})
+
+    respx.get(path__regex=r"^/v3/member/D000197$").respond(200, json={"member": {}})
+    respx.get(path__regex=r"^/v3/member/D000197/(co)?sponsored-legislation$").mock(side_effect=page)
+    http = HttpClient("t/0", min_interval_seconds=0, max_attempts=1, sleep=lambda s: None)
+    person = Person("D000197", None, "Diana DeGette", "DeGette", "house", "CO", "1")
+    ingest_members(conn, CongressGovClient(http, "K"), [person], 119, IngestResult(), "2025-12-11")
+    http.close()
+    assert blocked == []
+    assert conn.execute("SELECT COUNT(*) FROM run_log WHERE command='probe'").fetchone()[0] == 6

@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ValidationError
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -216,13 +216,29 @@ class JobIn(BaseModel):
 # --- app ------------------------------------------------------------------------------
 
 
+def normalize_base_path(value: str | None) -> str:
+    """'tracker', '/tracker/' -> '/tracker'; '', '/' or None -> '' (served at the root)."""
+    value = (value or "").strip().strip("/")
+    return f"/{value}" if value else ""
+
+
+def allowed_hosts_from_env() -> list[str]:
+    """TRACKER_ALLOWED_HOSTS (comma-separated; '*' allows any), always plus localhost for health checks."""
+    extra = [h.strip() for h in os.environ.get("TRACKER_ALLOWED_HOSTS", "").split(",") if h.strip()]
+    return sorted({"127.0.0.1", "localhost", *extra})
+
+
 def create_app(
     config_path: Path | str | None = None,
     allowed_hosts: list[str] | None = None,
     start_scheduler: bool = True,
+    base_path: str | None = None,
 ) -> FastAPI:
+    """The web app. With a base path (default: the API_PATH environment variable), everything is
+    served under it, e.g. /tracker/ and /tracker/api/..., for hosting behind a reverse proxy."""
     path = Path(config_path or os.environ.get("TRACKER_CONFIG", "config.toml")).resolve()
-    hosts = allowed_hosts or [h for h in os.environ.get("TRACKER_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",") if h]
+    hosts = allowed_hosts or allowed_hosts_from_env()
+    prefix = normalize_base_path(os.environ.get("API_PATH") if base_path is None else base_path)
     state = AppState(path)
     configure_logging(state.settings)
 
@@ -236,14 +252,28 @@ def create_app(
         scheduler.stop()
         state.runner.shutdown()
 
-    app = FastAPI(title="Legislator Vote Tracker", lifespan=lifespan)
+    # Under a base path the app is mounted inside an outer app, and only the outermost app's
+    # lifespan runs, so the scheduler and job runner are started from whichever is on top.
+    app = FastAPI(title="Legislator Vote Tracker", lifespan=None if prefix else lifespan)
     app.state.tracker = state
     app.state.scheduler = scheduler
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=hosts)
 
+    @app.exception_handler(sqlite3.OperationalError)
+    async def database_busy(request: Request, exc: sqlite3.OperationalError):
+        if "locked" in str(exc) or "busy" in str(exc):
+            return JSONResponse(
+                {"detail": "The database is busy with a background job. Try again in a moment."},
+                status_code=503,
+                headers={"Retry-After": "5"},
+            )
+        raise exc
+
     @app.middleware("http")
     async def require_client_header(request: Request, call_next):
-        if request.method in MUTATING and request.url.path.startswith("/api/") and not request.headers.get(CLIENT_HEADER):
+        # The path relative to where the app is mounted, so the check holds under a base path too.
+        local = request.scope["path"].removeprefix(request.scope.get("root_path", "")) or "/"
+        if request.method in MUTATING and local.startswith("/api/") and not request.headers.get(CLIENT_HEADER):
             return JSONResponse({"detail": f"Missing {CLIENT_HEADER} header."}, status_code=403)
         return await call_next(request)
 
@@ -537,7 +567,24 @@ def create_app(
                 "<!doctype html><title>Vote Tracker</title><body style='font-family:sans-serif;padding:2rem'>"
                 "<h1>The web UI has not been built</h1><p>Run <code>npm --prefix frontend install</code> and "
                 "<code>npm --prefix frontend run build</code>, then restart <code>tracker serve</code>. "
-                "The API is available under <a href='/docs'>/docs</a>.</p></body>"
+                "The API is available under <a href='docs'>docs</a>.</p></body>"
             )
 
-    return app
+    if not prefix:
+        return app
+
+    outer = FastAPI(title="Legislator Vote Tracker", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
+    outer.state.tracker = state
+    outer.state.scheduler = scheduler
+    outer.state.base_path = prefix
+    outer.add_middleware(TrustedHostMiddleware, allowed_hosts=hosts)
+
+    @outer.get(prefix, include_in_schema=False)
+    def add_trailing_slash() -> RedirectResponse:
+        # The UI uses relative URLs, which only resolve under the prefix with a trailing slash.
+        return RedirectResponse(f"{prefix}/", status_code=307)
+
+    outer.mount(prefix, app)
+    # Also answer at the root, for proxies configured to strip the prefix before forwarding.
+    outer.mount("/", app)
+    return outer

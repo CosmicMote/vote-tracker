@@ -10,6 +10,13 @@ const SECRET_HELP: Record<string, string> = {
 };
 
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : "");
+
+function elapsed(iso: string): string {
+  const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 60) return `${s} s`;
+  const m = Math.floor(s / 60);
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`;
+}
 // Vote dates only: Voteview publishes no times, so a time of day would be misleading.
 const day = (iso: string) => new Date(iso).toLocaleDateString();
 
@@ -151,9 +158,16 @@ function StatusAndJobs() {
   }, [refresh]);
 
   const busy = jobs?.jobs.some(isActive) ?? false;
+  const running = jobs?.jobs.find((j) => j.status === "running");
+  const queued = jobs?.jobs.filter((j) => j.status === "queued") ?? [];
+  const busyReason = running
+    ? `Wait for “${running.label}” to finish; jobs run one at a time.`
+    : queued.length
+      ? `Wait for the queued job${queued.length === 1 ? "" : "s"} to finish; jobs run one at a time.`
+      : undefined;
+  // Every 2 s while a job runs; every 10 s otherwise, to notice jobs the scheduler starts.
   useEffect(() => {
-    if (!busy) return;
-    const t = setInterval(refresh, 2000);
+    const t = setInterval(refresh, busy ? 2000 : 10000);
     return () => clearInterval(t);
   }, [busy, refresh]);
 
@@ -196,13 +210,36 @@ function StatusAndJobs() {
           </dl>
         </>
       )}
+      {busy && (
+        <div className="banner info">
+          <span className="spinner" aria-hidden />
+          <span>
+            {running ? (
+              <>
+                Running: <strong>{running.label}</strong>
+                {running.started_at && <> (for {elapsed(running.started_at)})</>}.
+              </>
+            ) : (
+              <>Starting the next job.</>
+            )}{" "}
+            {queued.length > 0 && <>Queued after it: {queued.map((j) => j.label).join("; ")}. </>}
+            These buttons are available again when it finishes; jobs run one at a time, and a full data update can
+            take several minutes.
+          </span>
+        </div>
+      )}
       <div className="job-actions">
-        <button className="btn primary" onClick={() => start("update")} disabled={busy}>
+        <button className="btn primary" onClick={() => start("update")} disabled={busy} title={busyReason}>
           Update data
         </button>
         <span className="inline-group">
           <input className="input narrow" type="date" min="2025-01-03" value={since} onChange={(e) => setSince(e.target.value)} />
-          <button className="btn" onClick={() => start("update", { since })} disabled={busy || !since}>
+          <button
+            className="btn"
+            onClick={() => start("update", { since })}
+            disabled={busy || !since}
+            title={busyReason ?? (since ? undefined : "Pick a start date first")}
+          >
             Backfill from date
           </button>
         </span>
@@ -210,11 +247,16 @@ function StatusAndJobs() {
           <label className="check small">
             <input type="checkbox" checked={allRecords} onChange={(e) => setAllRecords(e.target.checked)} /> all records
           </label>
-          <button className="btn" onClick={() => start("normalize", { all_records: allRecords })} disabled={busy}>
+          <button
+            className="btn"
+            onClick={() => start("normalize", { all_records: allRecords })}
+            disabled={busy}
+            title={busyReason}
+          >
             Re-normalize
           </button>
         </span>
-        <button className="btn" onClick={() => start("crosswalk")} disabled={busy}>
+        <button className="btn" onClick={() => start("crosswalk")} disabled={busy} title={busyReason}>
           Fetch member list
         </button>
       </div>

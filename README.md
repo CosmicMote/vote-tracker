@@ -152,10 +152,83 @@ So turning on Email → Enabled is all it takes to start getting the digest ever
 | `GET` and `POST /api/jobs`, `GET /api/status` | Jobs and run history; data status |
 
 **Safety without a login.** Two guards stop other websites open in your browser from driving the app:
-- The server accepts only requests whose `Host` is `127.0.0.1` or `localhost`, which blocks DNS rebinding.
+- The server accepts only requests whose `Host` is `127.0.0.1`, `localhost`, or a name listed in `TRACKER_ALLOWED_HOSTS`, which blocks DNS rebinding.
 - Every request that changes something must carry an `X-Tracker-Client` header. A cross-site page can't send that header without a CORS preflight, which this app never approves.
 
 If you bind to another interface with `--host`, `tracker serve` warns you, because anyone who can reach that port can change settings and send email.
+
+**Serving under a path.** Set `API_PATH` (for example `/tracker`) to serve the whole app, UI and API, under that path: the UI at `/tracker/` and the API at `/tracker/api/...`. The UI uses only relative URLs, so the same build works at any path. `/tracker` redirects to `/tracker/`. The app also answers at the root, so a reverse proxy may either pass the path through unchanged or strip the prefix. This is mainly for the container; see [Running in Docker](#running-in-docker).
+
+## Running in Docker
+
+The `Dockerfile` builds the whole app into one image: the web UI, the API, the background jobs and the scheduler. The container runs `tracker serve`, keeps all its state in a `/data` volume, and runs as an unprivileged user (uid 1000).
+
+### Build
+
+```bash
+docker build -t vote-tracker .
+```
+
+The build has two stages. A Node stage builds the React UI, then a slim Python 3.12 image installs the locked dependencies with uv and copies in the UI. Nothing from your working copy's local state goes into the image: `config.toml`, `tracker.db`, `digests/`, `logs/`, `.env` and `node_modules` are excluded by `.dockerignore`.
+
+### Run
+
+```bash
+docker run -d --name vote-tracker \
+  -p 127.0.0.1:8000:8000 \
+  -v vote-tracker-data:/data \
+  -e CONGRESS_GOV_API_KEY=... \
+  -e SMTP_PASSWORD=... \
+  --restart unless-stopped \
+  vote-tracker
+```
+
+Then open <http://127.0.0.1:8000/>. Logs go to `docker logs vote-tracker`, as well as to `/data/logs/tracker.log`.
+
+- **First run.** If `/data/config.toml` doesn't exist, the container copies `config.example.toml` there. Set your members and settings on the Members and Admin tabs; they're saved back to that file.
+- **Initial data.** The volume starts empty. On the Admin tab, click "Fetch member list", then "Backfill from date" with 2025-01-03. Or run it from the command line: `docker exec vote-tracker tracker ingest --since 2025-01-03 && docker exec vote-tracker tracker normalize`. Every CLI command works through `docker exec`.
+- **Using your existing data.** Bind-mount a folder instead of a named volume, for example `-v "$PWD/tracker-data":/data`, and put a copy of your `tracker.db` and `config.toml` in it. Relative paths in the config (such as `db_path = "./tracker.db"`) resolve inside `/data`; absolute host paths won't exist in the container. On Linux, the folder must be writable by uid 1000, or add `--user "$(id -u):$(id -g)"`.
+- **Secrets** are passed as environment variables (`-e`, or `--env-file` with a file only you can read). They are never written to the image or to `/data`.
+- **Ollama on the host.** Inside the container, `localhost` is the container itself. Set Admin → Summaries (LLM) → Base url to `http://host.docker.internal:11434`. That works out of the box with Docker Desktop on macOS and Windows; on Linux, add `--add-host=host.docker.internal:host-gateway` to `docker run`.
+- **Upgrading.** Rebuild the image, then remove and re-create the container with the same volume. The database is migrated automatically on startup.
+- **Health check.** The image reports healthy once the API answers (`docker inspect -f '{{.State.Health.Status}}' vote-tracker`).
+- **Scheduling.** The scheduled daily update and weekly email run inside the container for as long as it runs. When the container starts with an API key, it usually runs the day's data update straight away, which can take several minutes on a new volume. Jobs run one at a time, so until it finishes the Admin tab's Data buttons are unavailable; the Data card shows what is running and what is queued. Browsing digests works throughout.
+
+### Environment variables
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `API_PATH` | `""` (the root) | Path the app is served under behind a reverse proxy, e.g. `/tracker` |
+| `TRACKER_ALLOWED_HOSTS` | (none) | Extra `Host` names to accept, comma-separated, e.g. `tracker.example.org`. `localhost` and `127.0.0.1` are always accepted. `*.example.org` and `*` also work |
+| `CONGRESS_GOV_API_KEY` | (none) | Required to fetch House votes, bills and sponsorships |
+| `ANTHROPIC_API_KEY` | (none) | Only when `llm.provider = "anthropic"` |
+| `SMTP_PASSWORD` | (none) | Only when email is enabled |
+| `TRACKER_CONFIG` | `/data/config.toml` | Location of the config file |
+
+### Behind a reverse proxy
+
+For example, to serve the app at `https://example.org/tracker/`:
+
+```bash
+docker run -d --name vote-tracker \
+  -p 127.0.0.1:8000:8000 -v vote-tracker-data:/data \
+  -e API_PATH=/tracker -e TRACKER_ALLOWED_HOSTS=example.org \
+  -e CONGRESS_GOV_API_KEY=... --restart unless-stopped \
+  vote-tracker
+```
+
+Point the proxy's `/tracker/` location at `http://127.0.0.1:8000`. For example, in nginx:
+
+```nginx
+location /tracker/ {
+    proxy_pass http://127.0.0.1:8000;   # no trailing slash: the /tracker/ prefix is passed through
+    proxy_set_header Host $host;
+}
+```
+
+- **The `Host` header.** Pass the public host name through (`Host $host` in nginx) and list it in `TRACKER_ALLOWED_HOSTS`. Requests whose `Host` isn't allowed get `400 Invalid host header`. If your proxy rewrites `Host` to the upstream address instead, allow that name, or use `*` as a last resort.
+- **Prefix stripping is fine.** If the proxy removes `/tracker` before forwarding, the app still works, because it answers at the root as well. The interactive API docs (`/tracker/docs`) need the prefix passed through.
+- **Add authentication at the proxy.** The app has no login of its own; anyone who can reach it can change settings, start jobs and send email. Before exposing it beyond your machine, put HTTP basic auth or your SSO in front of it at the proxy. Keep the published port bound to `127.0.0.1`, as in the examples, so the only way in is through the proxy.
 
 ## Senate votes from Voteview
 
@@ -456,6 +529,9 @@ src/tracker/
     jobs.py               single-worker background job queue
     scheduler.py          daily data update and weekly digest email while the server runs
     static/               built UI (generated by `npm --prefix frontend run build`, not committed)
+Dockerfile                multi-stage image build (Node builds the UI, Python runs the app)
+docker-entrypoint.sh      creates /data/config.toml on first run, then runs the command
+.dockerignore
 frontend/                 React + TypeScript UI (Vite)
   src/pages/              DigestPage, MembersPage, AdminPage
   src/components/         DigestView, WeekPicker, SettingsForm (schema-driven)

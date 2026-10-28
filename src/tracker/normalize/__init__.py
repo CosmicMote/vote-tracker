@@ -17,6 +17,9 @@ from .context import NormalizeContext
 log = logging.getLogger(__name__)
 
 
+COMMIT_EVERY = 25
+
+
 class Incomplete(Exception):
     """A record that cannot be normalized until another record arrives; retried next run."""
 
@@ -49,8 +52,11 @@ def _each(
     label: str,
     fn: Callable[[sqlite3.Row], object],
 ) -> None:
-    """Apply fn to each raw row inside its own savepoint; one bad record never stops the run."""
-    for row in rows:
+    """Apply fn to each raw row inside its own savepoint; one bad record never stops the run.
+    Commits every COMMIT_EVERY records, so other writers never wait long for the lock."""
+    for n, row in enumerate(rows, 1):
+        if n % COMMIT_EVERY == 0:
+            ctx.conn.commit()
         ctx.conn.execute("SAVEPOINT rec")
         try:
             fn(row)

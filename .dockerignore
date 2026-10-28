@@ -1,0 +1,20 @@
+# Keep the build context small and keep local state and secrets out of the image.
+.git
+.venv
+**/__pycache__
+.pytest_cache
+.ruff_cache
+frontend/node_modules
+frontend/dist
+src/tracker/web/static
+tests
+digests
+logs
+*.db
+*.db-*
+config.toml
+config.toml.*
+.env
+Dockerfile
+.dockerignore
+Legislator Vote Tracker — MVP Spec.md

@@ -92,7 +92,11 @@ def store_raw(
     url: str | None = None,
     fetched_at: str | None = None,
 ) -> bool:
-    """Insert or update a raw record. Returns True if the payload is new or changed."""
+    """Insert or update a raw record, and commit. Returns True if the payload is new or changed.
+
+    Committing here means ingest never holds the database's write lock while it downloads the
+    next record, so the web app's own writes (such as analyzing a week) never wait behind it.
+    """
     h = payload_hash(payload)
     row = conn.execute(
         "SELECT payload_hash FROM raw_record WHERE source=? AND kind=? AND external_id=?",
@@ -105,19 +109,22 @@ def store_raw(
             " VALUES (?, ?, ?, ?, ?, ?, ?)",
             (source, kind, external_id, url, fetched_at, payload, h),
         )
-        return True
-    if row["payload_hash"] == h:
+        changed = True
+    elif row["payload_hash"] == h:
         conn.execute(
             "UPDATE raw_record SET fetched_at=? WHERE source=? AND kind=? AND external_id=?",
             (fetched_at, source, kind, external_id),
         )
-        return False
-    conn.execute(
-        "UPDATE raw_record SET url=?, fetched_at=?, payload=?, payload_hash=?"
-        " WHERE source=? AND kind=? AND external_id=?",
-        (url, fetched_at, payload, h, source, kind, external_id),
-    )
-    return True
+        changed = False
+    else:
+        conn.execute(
+            "UPDATE raw_record SET url=?, fetched_at=?, payload=?, payload_hash=?"
+            " WHERE source=? AND kind=? AND external_id=?",
+            (url, fetched_at, payload, h, source, kind, external_id),
+        )
+        changed = True
+    conn.commit()
+    return changed
 
 
 def get_raw(conn: sqlite3.Connection, source: str, kind: str, external_id: str) -> sqlite3.Row | None:

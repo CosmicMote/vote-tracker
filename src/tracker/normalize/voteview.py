@@ -89,6 +89,8 @@ def normalize_files(ctx: NormalizeContext, rollcalls: str, votes: str, members: 
             _write_rollcall(ctx, rc, positions.get(rc["rollnumber"], []), people)
             ctx.conn.execute("RELEASE vv")
             written += 1
+            if written % 50 == 0:
+                ctx.conn.commit()  # let other writers in during a long first load
         except Exception as e:  # noqa: BLE001 - one bad row never stops the rest
             ctx.conn.execute("ROLLBACK TO vv")
             ctx.conn.execute("RELEASE vv")

@@ -295,3 +295,62 @@ def test_send_refused_while_email_settings_incomplete(app_env):
     state.settings.secrets.smtp_password = "pw"
     r = client.post("/api/digest/2025-11-10/send", headers=HEADERS)
     assert r.status_code == 409 and "smtp_host" in r.json()["detail"]
+
+
+# --- serving under a path prefix (API_PATH), for reverse proxies ---------------------------
+
+from tracker.web.app import allowed_hosts_from_env, normalize_base_path  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    "value,expected", [(None, ""), ("", ""), ("/", ""), ("tracker", "/tracker"), ("/tracker/", "/tracker"),
+                       (" /a/b/ ", "/a/b")]
+)
+def test_normalize_base_path(value, expected):
+    assert normalize_base_path(value) == expected
+
+
+def test_allowed_hosts_always_include_localhost(monkeypatch):
+    monkeypatch.setenv("TRACKER_ALLOWED_HOSTS", "tracker.example.org, ")
+    assert allowed_hosts_from_env() == ["127.0.0.1", "localhost", "tracker.example.org"]
+
+
+@pytest.fixture
+def prefixed(tmp_path, monkeypatch):
+    monkeypatch.setattr("tracker.llm.make_provider", lambda settings: FakeProvider())
+    monkeypatch.setenv("API_PATH", "/tracker/")
+    cfg = tmp_path / "config.toml"
+    cfg.write_text(CONFIG.format(tmp=tmp_path))
+    conn = db.connect(tmp_path / "tracker.db")
+    db.init_db(conn)
+    load_crosswalk_fixtures(conn)
+    load_senate_fixtures(conn)
+    conn.commit()
+    from tracker.config import load_settings
+    from tracker.normalize import run_normalize
+
+    run_normalize(conn, load_settings(cfg))
+    conn.close()
+    app = create_app(cfg, allowed_hosts=["testserver"], start_scheduler=False)  # base path from API_PATH
+    with TestClient(app) as client:
+        yield client, app.state.tracker
+
+
+def test_app_is_served_under_the_prefix(prefixed):
+    client, _ = prefixed
+    r = client.get("/tracker", follow_redirects=False)
+    assert r.status_code == 307 and r.headers["location"] == "/tracker/"
+    assert client.get("/tracker/api/weeks").json()["first"] == "2024-12-30"
+    assert client.get("/tracker/").status_code == 200  # the UI (or the "not built" page)
+    assert client.get("/tracker/docs").status_code == 200
+    # Proxies that strip the prefix before forwarding work too.
+    assert client.get("/api/weeks").status_code == 200
+
+
+def test_guards_still_apply_under_the_prefix(prefixed):
+    client, state = prefixed
+    assert client.post("/tracker/api/jobs", json={"kind": "normalize"}).status_code == 403
+    job = client.post("/tracker/api/jobs", json={"kind": "normalize"}, headers=HEADERS)
+    assert job.status_code == 200
+    wait_idle(state)  # the job runner started with the outer app
+    assert client.get("/tracker/api/weeks", headers={"Host": "evil.example"}).status_code == 400

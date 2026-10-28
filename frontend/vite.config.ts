@@ -5,6 +5,8 @@ import react from "@vitejs/plugin-react";
 // `npm run dev` serves the UI on :5173 and proxies /api to `tracker serve` on :8000.
 export default defineConfig({
   plugins: [react()],
+  // Relative asset URLs, so the built UI works under any path prefix (see API_PATH in the README).
+  base: "./",
   build: {
     outDir: "../src/tracker/web/static",
     emptyOutDir: true,

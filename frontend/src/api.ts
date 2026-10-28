@@ -42,22 +42,24 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return (await res.json()) as T;
 }
 
+// Every URL is relative to the page, so the app works at the site root or under a path prefix
+// (API_PATH, e.g. https://example.com/tracker/) without rebuilding.
 export const api = {
-  status: () => request<Status>("GET", "/api/status"),
-  weeks: () => request<WeeksResponse>("GET", "/api/weeks"),
-  digest: (week: string) => request<DigestResponse>("GET", `/api/digest/${week}`),
-  emailUrl: (week: string) => `/api/digest/${week}/email`,
-  summarize: (week: string) => request<Job>("POST", `/api/digest/${week}/summarize`),
-  send: (week: string) => request<Job>("POST", `/api/digest/${week}/send`),
-  legislators: () => request<{ legislators: Legislator[] }>("GET", "/api/legislators"),
-  members: () => request<MembersResponse>("GET", "/api/members"),
-  saveMembers: (tracked: string[]) => request<MembersResponse>("PUT", "/api/members", { tracked }),
-  config: () => request<ConfigResponse>("GET", "/api/config"),
-  saveConfig: (values: ConfigValues) => request<ConfigResponse>("PUT", "/api/config", { values }),
+  status: () => request<Status>("GET", "api/status"),
+  weeks: () => request<WeeksResponse>("GET", "api/weeks"),
+  digest: (week: string) => request<DigestResponse>("GET", `api/digest/${week}`),
+  emailUrl: (week: string) => `api/digest/${week}/email`,
+  summarize: (week: string) => request<Job>("POST", `api/digest/${week}/summarize`),
+  send: (week: string) => request<Job>("POST", `api/digest/${week}/send`),
+  legislators: () => request<{ legislators: Legislator[] }>("GET", "api/legislators"),
+  members: () => request<MembersResponse>("GET", "api/members"),
+  saveMembers: (tracked: string[]) => request<MembersResponse>("PUT", "api/members", { tracked }),
+  config: () => request<ConfigResponse>("GET", "api/config"),
+  saveConfig: (values: ConfigValues) => request<ConfigResponse>("PUT", "api/config", { values }),
   validateConfig: (values: ConfigValues) =>
-    request<{ errors: FieldError[] }>("POST", "/api/config/validate", { values }),
-  jobs: () => request<JobsResponse>("GET", "/api/jobs"),
-  startJob: (kind: string, extra: Record<string, unknown> = {}) => request<Job>("POST", "/api/jobs", { kind, ...extra }),
+    request<{ errors: FieldError[] }>("POST", "api/config/validate", { values }),
+  jobs: () => request<JobsResponse>("GET", "api/jobs"),
+  startJob: (kind: string, extra: Record<string, unknown> = {}) => request<Job>("POST", "api/jobs", { kind, ...extra }),
 };
 
 export const isActive = (job: Job | null | undefined) => !!job && (job.status === "queued" || job.status === "running");

@@ -172,9 +172,13 @@ def serve(
     s = settings()  # fail early on a bad config
     if host not in ("127.0.0.1", "localhost", "::1"):
         typer.echo("warning: the web app has no authentication; binding beyond localhost exposes it", err=True)
-    os.environ["TRACKER_CONFIG"] = str((State.config_path or Path("config.toml")).resolve())
-    os.environ["TRACKER_ALLOWED_HOSTS"] = ",".join({"127.0.0.1", "localhost", host})
-    typer.echo(f"serving on http://{host}:{port}  (database {s.storage.db_path})")
+    config = State.config_path or Path(os.environ.get("TRACKER_CONFIG", "config.toml"))
+    os.environ["TRACKER_CONFIG"] = str(config.resolve())
+    if host not in ("0.0.0.0", "::"):  # a specific interface name is also a valid Host header
+        extra = [h for h in os.environ.get("TRACKER_ALLOWED_HOSTS", "").split(",") if h]
+        os.environ["TRACKER_ALLOWED_HOSTS"] = ",".join(sorted({*extra, host}))
+    base = os.environ.get("API_PATH", "").strip().strip("/")
+    typer.echo(f"serving on http://{host}:{port}/{base + '/' if base else ''}  (database {s.storage.db_path})")
     uvicorn.run("tracker.web.app:create_app", factory=True, host=host, port=port, reload=reload, log_config=None)
 
 
