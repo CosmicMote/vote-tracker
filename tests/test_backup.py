@@ -265,3 +265,10 @@ def test_backup_runs_once_per_daily_slot(app_env, monkeypatch):
     clock.now = at(2026, 10, 29, 3, 30)
     assert "backup" in scheduler.tick()
     assert ran == ["Scheduled backup to Dropbox"] * 2
+
+
+def test_import_has_no_body_size_limit_of_its_own(app_env):
+    # A 413 seen through a reverse proxy must come from the proxy: the app reads any size.
+    client, *_ = app_env
+    r = client.post("/api/backup/import", content=b"x" * 20_000_000, headers=HEADERS)
+    assert r.status_code == 422 and "not a zip" in r.json()["detail"]

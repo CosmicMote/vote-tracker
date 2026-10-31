@@ -229,11 +229,13 @@ Point the proxy's `/tracker/` location at `http://127.0.0.1:8000`. In nginx:
 location /tracker/ {
     proxy_pass http://127.0.0.1:8000;   # no trailing slash: the /tracker/ prefix is passed through
     proxy_set_header Host $host;
+    client_max_body_size 1g;            # importing a backup uploads it; nginx's default allows only 1 MB
 }
 ```
 
 - **The `Host` header.** Pass the public host name through (`Host $host` in nginx) and list it in `TRACKER_ALLOWED_HOSTS`. Requests whose `Host` isn't allowed get `400 Invalid host header`. If your proxy rewrites `Host` to the upstream address instead, allow that name, or use `*` as a last resort.
 - **Prefix stripping is fine.** If the proxy removes `/tracker` before forwarding, the app still works, because it answers at the root as well. The interactive API docs (`/tracker/docs`) need the prefix passed through.
+- **Allow large uploads.** Admin → Backup → Import backup uploads the whole backup (about 20 MB for a full Congress, more over time). nginx rejects request bodies over 1 MB by default with `413 Content Too Large`, so raise `client_max_body_size` as above. Other proxies have their own limits, such as Traefik's buffering middleware or Cloudflare's 100 MB cap on its free plan.
 - **Add authentication at the proxy.** Before exposing the app beyond your machine, put HTTP basic auth or your SSO in front of it.
 
 ---

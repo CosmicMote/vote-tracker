@@ -469,7 +469,12 @@ function BackupCard({ refreshKey, onRestored }: { refreshKey: unknown; onRestore
         text: `Backup from ${when(r.backup.created_at)} (${r.backup.votes} votes) checked. Restoring…`,
       });
     } catch (e) {
-      setMessage({ kind: "error", text: `Not restored: ${(e as Error).message}` });
+      const text =
+        e instanceof ApiError && e.status === 413
+          ? "Not restored: the upload was refused as too large (HTTP 413). The app itself has no size limit, so this " +
+            "usually comes from a reverse proxy in front of it; raise its upload limit (client_max_body_size in nginx)."
+          : `Not restored: ${(e as Error).message}`;
+      setMessage({ kind: "error", text });
     }
   };
 
