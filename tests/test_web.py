@@ -160,7 +160,8 @@ def test_config_round_trip_and_validation(app_env):
     c = client.get("/api/config").json()
     assert c["values"]["digest"]["top_n"] == 10
     assert "properties" in c["schema"] and "DigestConfig" in c["schema"]["$defs"]
-    assert c["secrets"] == {"CONGRESS_GOV_API_KEY": False, "ANTHROPIC_API_KEY": False, "SMTP_PASSWORD": False}
+    assert c["secrets"] == {"CONGRESS_GOV_API_KEY": False, "ANTHROPIC_API_KEY": False, "SMTP_PASSWORD": False,
+                            "DROPBOX_APP_KEY": False, "DROPBOX_REFRESH_TOKEN": False}
     values = c["values"]
     values["digest"]["timezone"] = "Mars/Olympus"
     bad = client.put("/api/config", json={"values": values}, headers=HEADERS)

@@ -207,6 +207,32 @@ class ScheduleConfig(BaseModel):
         return _hhmm(v, allow_blank=False)
 
 
+class BackupConfig(BaseModel):
+    """Daily backup of settings and data to Dropbox while `tracker serve` runs, in the digest time zone.
+    DROPBOX_APP_KEY and DROPBOX_REFRESH_TOKEN come from the environment (see `tracker dropbox-auth`)."""
+
+    enabled: bool = Field(False, description="Upload a backup to Dropbox every day at daily_at.")
+    daily_at: str = Field("03:30", description="Time of the daily backup (24-hour HH:MM).")
+    dropbox_folder: str = Field(
+        "/vote-tracker",
+        description="Dropbox folder for backups. For an App folder app, it is inside Apps/<app name>.",
+    )
+    keep: int = Field(14, ge=1, description="Backups to keep in the folder; older ones are deleted after each upload.")
+
+    @field_validator("daily_at")
+    @classmethod
+    def _time(cls, v: str) -> str:
+        return _hhmm(v, allow_blank=False)
+
+    @field_validator("dropbox_folder")
+    @classmethod
+    def _folder(cls, v: str) -> str:
+        v = v.strip().strip("/")
+        if not v:
+            raise ValueError("enter a folder, e.g. /vote-tracker")
+        return f"/{v}"
+
+
 class ScoringConfig(BaseModel):
     """Weights and thresholds for picking notable votes."""
 
@@ -251,6 +277,12 @@ class Secrets(BaseModel):
     congress_gov_api_key: str | None = None
     anthropic_api_key: str | None = None
     smtp_password: str | None = None
+    dropbox_app_key: str | None = None
+    dropbox_refresh_token: str | None = None
+
+    @property
+    def dropbox_ready(self) -> bool:
+        return bool(self.dropbox_app_key and self.dropbox_refresh_token)
 
     @classmethod
     def from_env(cls) -> "Secrets":
@@ -258,6 +290,8 @@ class Secrets(BaseModel):
             congress_gov_api_key=os.environ.get("CONGRESS_GOV_API_KEY") or None,
             anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY") or None,
             smtp_password=os.environ.get("SMTP_PASSWORD") or None,
+            dropbox_app_key=os.environ.get("DROPBOX_APP_KEY") or None,
+            dropbox_refresh_token=os.environ.get("DROPBOX_REFRESH_TOKEN") or None,
         )
 
 
@@ -270,6 +304,7 @@ class Settings(BaseModel):
     digest: DigestConfig = Field(default_factory=DigestConfig)
     email: EmailConfig = Field(default_factory=EmailConfig)
     schedule: ScheduleConfig = Field(default_factory=ScheduleConfig)
+    backup: BackupConfig = Field(default_factory=BackupConfig)
     scoring: ScoringConfig = Field(default_factory=ScoringConfig)
     storage: StorageConfig = Field(default_factory=StorageConfig)
     secrets: Secrets = Field(default_factory=Secrets, exclude=True)

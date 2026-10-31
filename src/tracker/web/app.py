@@ -10,7 +10,9 @@ websites open in the same browser from driving it:
 from __future__ import annotations
 
 import os
+import shutil
 import sqlite3
+import tempfile
 import threading
 from contextlib import asynccontextmanager, closing
 from datetime import date, timedelta
@@ -18,12 +20,14 @@ from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ValidationError
+from starlette.background import BackgroundTask
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from .. import analyze, db, pipeline
+from .. import analyze, backup, db, pipeline
 from ..analyze import last_name
 from ..config import EmailConfig, MembersConfig, Settings, email_problems, load_settings
 from ..config_store import save_settings
@@ -129,6 +133,8 @@ def secrets_status(s: Settings) -> dict[str, bool]:
         "CONGRESS_GOV_API_KEY": bool(s.secrets.congress_gov_api_key),
         "ANTHROPIC_API_KEY": bool(s.secrets.anthropic_api_key),
         "SMTP_PASSWORD": bool(s.secrets.smtp_password),
+        "DROPBOX_APP_KEY": bool(s.secrets.dropbox_app_key),
+        "DROPBOX_REFRESH_TOKEN": bool(s.secrets.dropbox_refresh_token),
     }
 
 
@@ -163,6 +169,38 @@ def submit_refresh_members(state: AppState, bioguides: list[str]) -> Job | None:
         lambda conn, s: pipeline.refresh_members(conn, s, bioguides),
         key=f"refresh-members:{','.join(sorted(bioguides))}",
     )
+
+
+def submit_backup(state: AppState, label: str = "Back up to Dropbox") -> Job:
+    def run(conn: sqlite3.Connection, s: Settings) -> dict:
+        work = Path(tempfile.mkdtemp(prefix="tracker-backup-"))
+        try:
+            with pipeline.logged_run(conn, "backup") as result:
+                result["stats"] = backup.to_dropbox(conn, s, state.config_path, work)
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+        return {**result, "message": f"Uploaded {result['stats']['path']}"}
+
+    return state.runner.submit("backup", label, run, key="backup")
+
+
+def submit_restore(state: AppState, r: backup.Restore, work: Path) -> Job:
+    """Restore as a job, so it never overlaps a pipeline stage. Not a logged_run: the run_log row
+    it opened would be overwritten by the restore, so the row is written afterwards."""
+
+    def run(conn: sqlite3.Connection, s: Settings) -> dict:
+        try:
+            with state.analyze_lock:
+                stats = backup.restore(conn, r, state.config_path, Path(s.storage.db_path))
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+        db.finish_run(conn, db.start_run(conn, "restore"), "ok", stats)
+        state.reload()
+        state._crosswalk = None
+        state.auto_summarized.clear()
+        return {"status": "ok", "stats": stats, "message": f"Restored the backup made {stats['restored_from']}."}
+
+    return state.runner.submit("restore", f"Restore backup from {r.manifest.get('created_at')}", run, key="restore")
 
 
 def update_job(since: date | None):
@@ -554,6 +592,53 @@ def create_app(
                 raise HTTPException(400, "summarize needs a week")
             job = submit_summarize(state, parse_week(s, body.week))
         return job.as_dict()
+
+    # --- backup ---------------------------------------------------------------
+
+    @app.get("/api/backup/export")
+    def export_backup() -> FileResponse:
+        """Download every setting and all data as one zip (no secrets)."""
+        work = Path(tempfile.mkdtemp(prefix="tracker-export-"))
+        name = backup.archive_name()
+        try:
+            with closing(state.conn()) as conn:
+                backup.create_archive(conn, state.config_path, work / name)
+        except BaseException:
+            shutil.rmtree(work, ignore_errors=True)
+            raise
+        return FileResponse(
+            work / name, media_type="application/zip", filename=name,
+            background=BackgroundTask(shutil.rmtree, work, ignore_errors=True),
+        )
+
+    @app.post("/api/backup/import")
+    async def import_backup(request: Request) -> dict:
+        """Upload a backup zip as the request body. It is checked here; the restore itself runs as
+        a job, after any job already running."""
+        current = state.runner.find("restore")
+        if current is not None and current.active:
+            raise HTTPException(409, "A restore is already queued or running.")
+        work = Path(tempfile.mkdtemp(prefix="tracker-restore-"))
+        try:
+            upload = work / "upload.zip"
+            with upload.open("wb") as f:
+                async for chunk in request.stream():
+                    f.write(chunk)
+            r = await run_in_threadpool(backup.open_archive, upload, work, state.config_path)
+            upload.unlink()
+        except backup.BackupError as e:
+            shutil.rmtree(work, ignore_errors=True)
+            raise HTTPException(422, str(e)) from None
+        except BaseException:
+            shutil.rmtree(work, ignore_errors=True)
+            raise
+        return {"job": submit_restore(state, r, work).as_dict(), "backup": r.manifest}
+
+    @app.post("/api/backup/dropbox")
+    def backup_now() -> dict:
+        if not state.settings.secrets.dropbox_ready:
+            raise HTTPException(409, "DROPBOX_APP_KEY and DROPBOX_REFRESH_TOKEN must be set in the server's environment.")
+        return submit_backup(state).as_dict()
 
     # --- UI -------------------------------------------------------------------
 

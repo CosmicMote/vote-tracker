@@ -76,7 +76,11 @@ def save_settings(path: Path, settings: Settings) -> None:
     if not changes:
         return
     _apply(doc, changes)
-    text = tomlkit.dumps(doc)
+    write_config_text(path, tomlkit.dumps(doc))
+
+
+def write_config_text(path: Path, text: str) -> None:
+    """Replace config.toml atomically, keeping the previous file as config.toml.bak."""
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(text, encoding="utf-8")
     if path.exists():

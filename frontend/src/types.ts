@@ -157,6 +157,15 @@ export interface Status {
 export interface Schedule {
   running: boolean;
   update: { next: string; needs_key: boolean } | null;
+  backup: {
+    enabled: boolean;
+    folder: string;
+    keep: number;
+    next: string;
+    needs_credentials: boolean;
+    last_ok: { path: string; at: string } | null;
+    last_error: { message: string; at: string } | null;
+  };
   digest: {
     email_enabled: boolean;
     when: string;
@@ -198,6 +207,19 @@ export interface ConfigResponse {
   schema: JsonSchema;
   secrets: Record<string, boolean>;
   job?: Job | null;
+}
+
+export interface BackupManifest {
+  created_at: string;
+  app_version: string;
+  congress: number | null;
+  tracked: string[];
+  votes: number;
+}
+
+export interface BackupImportResponse {
+  job: Job;
+  backup: BackupManifest;
 }
 
 export interface FieldError {

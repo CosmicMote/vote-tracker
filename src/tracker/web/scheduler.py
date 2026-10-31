@@ -1,10 +1,14 @@
-"""Scheduled work for `tracker serve`: a daily data update and the weekly digest email.
+"""Scheduled work for `tracker serve`: a daily data update, the weekly digest email, and a daily
+backup to Dropbox.
 
 A thread wakes every 30 seconds and compares the clock with the most recent scheduled
 "slot" for each task, in the digest time zone. Each slot is attempted once, recorded in
 sync_state, so a failure is reported on the Admin tab rather than retried in a loop, and a
 slot missed while the computer slept or the server was stopped runs when it comes back.
 Only the most recent slot is ever caught up.
+
+The backup runs only when it is enabled and the Dropbox secrets are set. Unlike the email,
+enabling it backs up for the latest slot straight away, which doubles as a test of the setup.
 
 The digest email goes out only when email is enabled. Enabling email never sends for a slot
 that has already passed: the first email goes out at the next slot. A week already emailed
@@ -21,7 +25,7 @@ from datetime import UTC, date, datetime, timedelta
 from typing import TYPE_CHECKING, Callable
 from zoneinfo import ZoneInfo
 
-from .. import analyze, db, pipeline
+from .. import analyze, backup, db, pipeline
 from ..config import WEEKDAYS, Settings, email_problems
 from ..render import fmt_date
 
@@ -33,6 +37,7 @@ log = logging.getLogger(__name__)
 UPDATE_KEY = "schedule:update"  # cursor: the daily slot last started (UTC ISO)
 DIGEST_KEY = "schedule:digest"  # cursor: the weekly slot last started (UTC ISO)
 EMAIL_SINCE_KEY = "schedule:email_enabled_since"  # cursor: when email was first seen enabled
+BACKUP_KEY = "schedule:backup"  # cursor: the daily backup slot last started (UTC ISO)
 
 
 def _utc(dt: datetime) -> str:
@@ -68,6 +73,7 @@ class Scheduler:
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
         self._warned_no_key = False
+        self._warned_no_dropbox = False
 
     def start(self) -> None:
         self._thread = threading.Thread(target=self._loop, name="tracker-scheduler", daemon=True)
@@ -97,6 +103,8 @@ class Scheduler:
                 started.append("update")
             if self._digest_due(conn, s, local, now):
                 started.append("weekly")
+            if self._backup_due(conn, s, local):
+                started.append("backup")
         return started
 
     def _update_due(self, conn: sqlite3.Connection, s: Settings, local: datetime) -> bool:
@@ -149,6 +157,25 @@ class Scheduler:
         log.info("scheduled digest email started for week of %s (slot %s)", period.start, slot)
         return True
 
+    def _backup_due(self, conn: sqlite3.Connection, s: Settings, local: datetime) -> bool:
+        if not s.backup.enabled:
+            return False
+        if not s.secrets.dropbox_ready:
+            if not self._warned_no_dropbox:
+                log.warning("scheduled backups are off: DROPBOX_APP_KEY and DROPBOX_REFRESH_TOKEN must be set")
+                self._warned_no_dropbox = True
+            return False
+        slot = _utc(latest_slot(local, s.backup.daily_at))
+        if _cursor(conn, BACKUP_KEY) == slot:
+            return False
+        db.set_sync(conn, BACKUP_KEY, slot)
+        conn.commit()
+        from .app import submit_backup  # avoid an import cycle
+
+        submit_backup(self.state, "Scheduled backup to Dropbox")
+        log.info("scheduled backup started (slot %s)", slot)
+        return True
+
     # --- for the Admin tab ------------------------------------------------------------
 
     def describe(self, conn: sqlite3.Connection) -> dict:
@@ -174,6 +201,7 @@ class Scheduler:
         return {
             "running": True,
             "update": update,
+            "backup": self._describe_backup(conn, local, fmt),
             "digest": {
                 "email_enabled": s.email.enabled,
                 "when": f"every {s.schedule.digest_weekday.title()} at {nxt_digest:%-I:%M %p}",
@@ -183,4 +211,20 @@ class Scheduler:
                 "problems": [f"{p['loc'][-1]}: {p['msg']}" for p in email_problems(s.email)],
                 "last_sent": last_sent,
             },
+        }
+
+    def _describe_backup(self, conn: sqlite3.Connection, local: datetime, fmt: Callable[[datetime], str]) -> dict:
+        s = self.state.settings
+        tz = local.tzinfo
+        last_ok = db.get_sync(conn, backup.LAST_OK_KEY)
+        last_error = db.get_sync(conn, backup.LAST_ERROR_KEY)
+        when = lambda row: fmt(datetime.fromisoformat(row["last_run"].replace("Z", "+00:00")).astimezone(tz))  # noqa: E731
+        return {
+            "enabled": s.backup.enabled,
+            "folder": s.backup.dropbox_folder,
+            "keep": s.backup.keep,
+            "next": fmt(latest_slot(local, s.backup.daily_at) + timedelta(days=1)),
+            "needs_credentials": not s.secrets.dropbox_ready,
+            "last_ok": {"path": last_ok["cursor"], "at": when(last_ok)} if last_ok else None,
+            "last_error": {"message": last_error["cursor"], "at": when(last_error)} if last_error else None,
         }

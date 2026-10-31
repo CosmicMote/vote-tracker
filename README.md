@@ -67,6 +67,7 @@ On first start the app has no data and tracks Colorado's delegation as an exampl
 4. **Choose your members.** On the Members tab, pick your state, then your representative and two senators, and save. The order matters in one place: delegation splits compare the first two senators.
 5. **Load the votes.** Admin → Data → **Backfill from date**, with `2025-01-03` (the start of the 119th Congress). This makes a few thousand Congress.gov requests at one per second, so it takes about an hour. Jobs run one at a time; browsing works meanwhile.
 6. **Turn on the weekly email (optional).** Follow [Sending the digest from a Gmail account](#sending-the-digest-from-a-gmail-account), then use "Send last week's digest now" on the Admin tab to test it.
+7. **Turn on daily backups (optional).** Follow [Backing up to Dropbox](#backing-up-to-dropbox).
 
 After that, the app keeps itself up to date: it fetches new data daily and, if email is on, sends last week's digest every Saturday. Open the **Digest** tab to read any week.
 
@@ -80,6 +81,7 @@ After that, the app keeps itself up to date: it fetches new data daily and, if e
 
 **Admin tab.**
 - **Schedule & email:** whether the weekly email is on, when the next one goes out and which week it covers, the last digest sent, and the next data update. It warns when a setting or secret the schedule needs is missing. "Preview last week's email" opens the exact HTML the email would contain. "Send last week's digest now" is for testing your email settings.
+- **Backup:** whether the daily Dropbox backup is on, when the next one runs, and the last one made. "Back up to Dropbox now" uploads one immediately; "Export backup" downloads one; "Import backup…" restores one. See [Backups](#backups).
 - **Data:** vote counts, a warning when a chamber's last update failed, and buttons for "Update data", "Backfill from date", "Re-normalize" and "Fetch member list".
 - **Jobs:** background jobs with live status, and the history of past runs.
 - **Secrets:** whether each one is set; values are never shown.
@@ -87,7 +89,7 @@ After that, the app keeps itself up to date: it fetches new data daily and, if e
 
 ### Scheduled updates and the weekly email
 
-While the app runs, it does two things on a schedule, in the time zone set under Admin → Settings → Digest → Timezone (default `America/Denver`). Both times are editable under Admin → Settings → Schedule.
+While the app runs, it does two things on a schedule (three with [backups](#backing-up-to-dropbox)), in the time zone set under Admin → Settings → Digest → Timezone (default `America/Denver`). Both times are editable under Admin → Settings → Schedule.
 
 | Task | Default | Needs |
 | --- | --- | --- |
@@ -139,6 +141,46 @@ Things to know:
 - **`535 Username and Password not accepted`** means Gmail rejected the login. Check that `SMTP_PASSWORD` holds the app password (not your account password), that the container was re-created after setting it, and that Smtp user (or From addr) is the account the app password belongs to.
 - **Revoking access:** delete the app password on the same Google page. Nothing else on the account changes.
 
+### Backups
+
+A backup is a single zip file holding everything the app keeps: `config.toml` (every setting) and a snapshot of the database (votes, bills, summaries, schedule history). Secrets are never included; they stay in the environment. A backup is consistent even when it is taken while a job is running. A full 119th Congress database compresses to about 20 MB.
+
+- **Export:** Admin → Backup → **Export backup** downloads one, named like `tracker-backup-20261031T093000Z.zip`. It takes a few seconds to start.
+- **Daily to Dropbox:** see [Backing up to Dropbox](#backing-up-to-dropbox).
+- **Import (restore):** Admin → Backup → **Import backup…**, then choose a backup zip. It replaces all settings and data. Before anything changes, the file is checked: it must be a tracker backup, its settings must be valid, and its database must be intact. If it fails a check, nothing is changed and the reason is shown. The restore then runs as a background job, after any job already running. What it keeps:
+  - **The current data and settings, as a fallback.** The database is copied to `tracker.db.before-restore`, and the settings to `config.toml.bak`, next to the originals.
+  - **This machine's file locations.** The current `db_path`, `log_dir` and `output_dir` stay as they are, so a backup made outside Docker restores into the container and vice versa.
+  - **Backups from older versions.** The database is migrated as on startup.
+
+To restore from Dropbox, download the backup from the Dropbox website or app first, then import it.
+
+### Backing up to Dropbox
+
+While the app runs, it can upload a backup to a Dropbox folder every day (03:30 by default) and delete the oldest ones, keeping the newest 14. You need a Dropbox app of your own, which takes a few minutes to set up once:
+
+**1. Create the app.** At <https://www.dropbox.com/developers/apps>, choose **Create app** → **Scoped access** → **App folder**, and name it, e.g. "vote-tracker-backup" (the name must be unique across Dropbox). With an App folder app, the tracker can only see its own folder, `Apps/<app name>/`.
+
+**2. Grant permissions.** On the app's **Permissions** tab, check `files.metadata.read` and `files.content.write`, then **Submit**. Do this before step 3: a token only carries the permissions the app had when it was issued.
+
+**3. Connect it.** Copy the **App key** from the app's **Settings** tab (the app secret is not needed), then run:
+
+```bash
+docker exec -it vote-tracker tracker dropbox-auth --app-key YOUR_APP_KEY
+```
+
+(Outside Docker, run `uv run tracker dropbox-auth` instead.) Open the link it prints, click **Allow**, and paste the code Dropbox shows back into the terminal. It prints `DROPBOX_APP_KEY` and `DROPBOX_REFRESH_TOKEN`. The token does not expire; keep it private, like a password.
+
+**4. Give the app the secrets.** Re-create the container with `-e DROPBOX_APP_KEY=… -e DROPBOX_REFRESH_TOKEN=…`.
+
+**5. Turn it on.** Admin → Settings → Backup → Enabled, then Save. The first backup runs right away, and its result appears on the Backup card. After that, one runs every day at the time in Backup → Daily at.
+
+Things to know:
+
+- **Folder.** Dropbox folder (`/vote-tracker` by default) is inside the app folder, so backups land in `Apps/<app name>/vote-tracker/`.
+- **Pruning** only ever deletes files named like `tracker-backup-*.zip` in that folder. Deleted backups go to Dropbox's deleted files, where they can be recovered for a while.
+- **One attempt per day.** A failed backup shows on the Backup card and in the logs, and is retried at the next daily time. Use "Back up to Dropbox now" after fixing the cause.
+- **Revoking access:** remove the app under Dropbox → Settings → Connected apps, or delete it on the developers page.
+
 ---
 
 ## Running in Docker
@@ -160,6 +202,7 @@ The image holds the whole app: the web UI, the API, the background jobs and the 
 | `CONGRESS_GOV_API_KEY` | (none) | Required to fetch House votes, bills and sponsorships |
 | `ANTHROPIC_API_KEY` | (none) | Only when the LLM provider is `anthropic` |
 | `SMTP_PASSWORD` | (none) | Only when email is enabled |
+| `DROPBOX_APP_KEY`, `DROPBOX_REFRESH_TOKEN` | (none) | Only for backups to Dropbox; `tracker dropbox-auth` prints both |
 | `API_PATH` | `""` (the root) | Path the app is served under behind a reverse proxy, e.g. `/tracker` |
 | `TRACKER_ALLOWED_HOSTS` | (none) | Extra `Host` names to accept, comma-separated, e.g. `tracker.example.org`. `localhost` and `127.0.0.1` are always accepted. `*.example.org` and `*` also work |
 | `TRACKER_CONFIG` | `/data/config.toml` | Location of the config file |

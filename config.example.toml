@@ -53,6 +53,14 @@ update_daily_at = "02:15"      # fetch new data and normalize daily; "" turns it
 digest_weekday = "saturday"    # email last week's digest on this day...
 digest_at = "07:35"            # ...at this time, when [email] enabled = true
 
+[backup]
+# Daily backup of config.toml and the database to Dropbox, by `tracker serve`, in the [digest]
+# time zone. Needs DROPBOX_APP_KEY and DROPBOX_REFRESH_TOKEN; `tracker dropbox-auth` prints them.
+enabled = false
+daily_at = "03:30"
+dropbox_folder = "/vote-tracker"   # for an App folder app, inside Apps/<app name>
+keep = 14                          # older backups in the folder are deleted
+
 [storage]
 db_path = "./tracker.db"
 log_dir = "./logs"

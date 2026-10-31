@@ -1,4 +1,5 @@
 import type {
+  BackupImportResponse,
   ConfigResponse,
   ConfigValues,
   DigestResponse,
@@ -24,8 +25,14 @@ export class ApiError extends Error {
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = {};
   if (method !== "GET") headers["X-Tracker-Client"] = "web"; // required by the server for changes
-  if (body !== undefined) headers["Content-Type"] = "application/json";
-  const res = await fetch(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+  // A file is sent as the raw request body; anything else as JSON.
+  const raw = body instanceof Blob;
+  if (body !== undefined) headers["Content-Type"] = raw ? "application/zip" : "application/json";
+  const res = await fetch(path, {
+    method,
+    headers,
+    body: body === undefined ? undefined : raw ? body : JSON.stringify(body),
+  });
   if (!res.ok) {
     let detail: unknown = res.statusText;
     try {
@@ -60,6 +67,9 @@ export const api = {
     request<{ errors: FieldError[] }>("POST", "api/config/validate", { values }),
   jobs: () => request<JobsResponse>("GET", "api/jobs"),
   startJob: (kind: string, extra: Record<string, unknown> = {}) => request<Job>("POST", "api/jobs", { kind, ...extra }),
+  backupExportUrl: "api/backup/export",
+  importBackup: (file: File) => request<BackupImportResponse>("POST", "api/backup/import", file),
+  backupNow: () => request<Job>("POST", "api/backup/dropbox"),
 };
 
 export const isActive = (job: Job | null | undefined) => !!job && (job.status === "queued" || job.status === "running");

@@ -53,6 +53,7 @@ Secrets are read from the environment at startup and are never shown in the UI o
 | `tracker members` | Show tracked members as resolved: chamber, state, district, Bioguide and LIS IDs, party, caucus |
 | `tracker explain-vote <chamber> <session> <roll>` | Print one vote's classification, threshold, caucus positions and per-member score, for tuning. Session is `119-1`, or just `1` |
 | `tracker serve [--host 127.0.0.1] [--port 8000]` | Run the web app |
+| `tracker dropbox-auth [--app-key KEY]` | Connect a Dropbox app for backups (OAuth with PKCE, so no app secret); prints `DROPBOX_REFRESH_TOKEN` |
 
 Global options are `-c/--config PATH` (default `./config.toml`, or `$TRACKER_CONFIG`) and `-v/--verbose`. In the container, run any of these with `docker exec vote-tracker tracker ...`.
 
@@ -77,7 +78,8 @@ A FastAPI JSON API plus a React single-page app, on top of the same pipeline cod
 
 - `src/tracker/pipeline.py` holds the stage functions. The CLI and the web app share them, so both write the same `run_log` rows.
 - `src/tracker/web/jobs.py` runs background work on a single worker thread, so stages never overlap. A job that is already queued or running is not queued again. When a week is opened, summary jobs for other weeks that haven't started are cancelled, and re-queued if those weeks are opened again. A running job always finishes.
-- `src/tracker/web/scheduler.py` runs the daily update and weekly email. It fires once per scheduled slot, catches up only the most recent missed slot, and never fires for a slot that passed before email was enabled.
+- `src/tracker/web/scheduler.py` runs the daily update, the weekly email and the daily backup. It fires once per scheduled slot, catches up only the most recent missed slot, and never fires for a slot that passed before email was enabled. Backups do run for the latest slot as soon as they are enabled.
+- `src/tracker/backup.py` makes and restores backups: a zip of `manifest.json`, `config.toml` and a `VACUUM INTO` snapshot of the database. A restore runs as a job (so it never overlaps a stage) holding the analyze lock. It saves the live database as `<db>.before-restore`, copies the snapshot in with SQLite's backup API (so other threads' connections stay valid), migrates it, writes `config.toml` with this machine's `db_path`, `log_dir` and `output_dir`, and reloads settings. `src/tracker/dropbox.py` is a small httpx client: a token refresh, chunked upload sessions (single uploads are capped at 150 MB), listing and delete. `sync_state` holds `backup:last_ok` and `backup:last_error` for the Admin tab.
 - Opening a week runs analyze only when its inputs changed. `sync_state` holds `data_version`, bumped by ingest/normalize, and `analyzed:<week>`, a signature of the data version, tracked members and scoring settings.
 - `src/tracker/config_store.py` writes settings back with `tomlkit`. Only lines whose values changed are rewritten, so comments and layout survive, and the previous file is kept as `config.toml.bak`.
 - The settings form is generated from the pydantic models' JSON Schema. Two kinds of validation apply: **startup rules** (types, ranges, `HH:MM` times, the time zone, `http(s)` URLs), which the program can't run without, and **readiness rules** for email (a real SMTP host and addresses). Readiness rules block saving and sending, but only log a warning when a config file loads, so a half-finished `[email]` section never locks you out.
@@ -94,6 +96,9 @@ A FastAPI JSON API plus a React single-page app, on top of the same pipeline cod
 | `GET /api/legislators`, `GET` and `PUT /api/members` | Current members of Congress; the tracked selection |
 | `GET` and `PUT /api/config`, `POST /api/config/validate` | All settings, their JSON Schema, and which secrets are set; check settings without saving |
 | `GET` and `POST /api/jobs`, `GET /api/status` | Jobs and run history; data status |
+| `GET /api/backup/export` | Download a backup zip |
+| `POST /api/backup/import` | Upload a backup zip as the raw body; it is checked (422 with the reason if not), then restored by a job |
+| `POST /api/backup/dropbox` | Back up to Dropbox now (a job) |
 
 **Safety without a login.**
 - The server accepts only requests whose `Host` is `127.0.0.1`, `localhost`, or a name in `TRACKER_ALLOWED_HOSTS`, which blocks DNS rebinding.
@@ -301,7 +306,7 @@ The subject line is `Your delegation — week of <Mon date>: <n> notable votes, 
 
 ## Configuration
 
-Everything lives in `config.toml`; see [config.example.toml](config.example.toml) for every key with comments. Secrets come only from the environment: `CONGRESS_GOV_API_KEY`, `ANTHROPIC_API_KEY` and `SMTP_PASSWORD`.
+Everything lives in `config.toml`; see [config.example.toml](config.example.toml) for every key with comments. Secrets come only from the environment: `CONGRESS_GOV_API_KEY`, `ANTHROPIC_API_KEY`, `SMTP_PASSWORD`, `DROPBOX_APP_KEY` and `DROPBOX_REFRESH_TOKEN`.
 
 | Section | Keys |
 | --- | --- |
@@ -313,6 +318,7 @@ Everything lives in `config.toml`; see [config.example.toml](config.example.toml
 | `[digest]` | `top_n`, `missed_vote_min_score`, `output_dir`, `timezone` |
 | `[email]` | `enabled` (turns on the weekly email), `smtp_host`, `smtp_port`, `smtp_user`, `from_addr`, `to_addr` |
 | `[schedule]` | `update_daily_at`, `digest_weekday`, `digest_at` (used by `tracker serve`) |
+| `[backup]` | `enabled`, `daily_at`, `dropbox_folder`, `keep` (used by `tracker serve`) |
 | `[storage]` | `db_path`, `log_dir`, `crosswalk_url`, `crosswalk_historical_url`, `crosswalk_max_age_days`, `corrections_window_days` |
 | `[scoring]` | `party_break_bonus`, `sponsor_bonus`, `tie_breaker_bonus`, `break_min_cohesion`, `break_min_caucus_size`, `lopsided_share`, `contested_cohesion`, `[scoring.base_weights]`, `[scoring.topic_boost]` |
 
@@ -400,6 +406,8 @@ src/tracker/
   summarize.py            stage 4: basis choice, cache, retry, fallback, summary view
   render.py               stage 5: digest view model and vote-context templates
   deliver.py              stage 6: SMTP with STARTTLS
+  backup.py               backup zip: create, check, restore; daily upload to Dropbox with pruning
+  dropbox.py              minimal Dropbox API client: PKCE auth, chunked upload, list, delete
   templates/digest.html.j2
   pipeline.py             stage functions shared by the CLI and the web app; run_log; data version
   config_store.py         write settings back to config.toml (tomlkit, comment-preserving)

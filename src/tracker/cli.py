@@ -182,6 +182,27 @@ def serve(
     uvicorn.run("tracker.web.app:create_app", factory=True, host=host, port=port, reload=reload, log_config=None)
 
 
+@app.command("dropbox-auth")
+def dropbox_auth(
+    app_key: str = typer.Option(..., envvar="DROPBOX_APP_KEY", prompt="Dropbox app key", help="Your Dropbox app's key."),
+) -> None:
+    """Connect a Dropbox app for backups: prints the DROPBOX_REFRESH_TOKEN to give the server."""
+    from .dropbox import DropboxError, authorize_url, exchange_code, pkce_pair
+
+    verifier, challenge = pkce_pair()
+    typer.echo("1. Open this page, sign in to Dropbox and click Allow:\n")
+    typer.echo(f"   {authorize_url(app_key, challenge)}\n")
+    code = typer.prompt("2. Paste the access code Dropbox shows")
+    try:
+        token = exchange_code(app_key, code, verifier)
+    except DropboxError as e:
+        typer.echo(f"error: {e}", err=True)
+        raise typer.Exit(1) from None
+    typer.echo("\n3. Start the server with these two environment variables (keep the token private):\n")
+    typer.echo(f"   DROPBOX_APP_KEY={app_key}")
+    typer.echo(f"   DROPBOX_REFRESH_TOKEN={token}")
+
+
 @app.command()
 def members() -> None:
     """Show tracked members as resolved: chamber, state, Bioguide and LIS IDs."""

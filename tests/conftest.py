@@ -29,7 +29,8 @@ def no_network(monkeypatch):
     monkeypatch.setattr(socket, "create_connection", guard)
 
 
-TRACKER_ENV = ("CONGRESS_GOV_API_KEY", "ANTHROPIC_API_KEY", "SMTP_PASSWORD", "TRACKER_CONFIG", "TRACKER_ALLOWED_HOSTS")
+TRACKER_ENV = ("CONGRESS_GOV_API_KEY", "ANTHROPIC_API_KEY", "SMTP_PASSWORD", "DROPBOX_APP_KEY", "DROPBOX_REFRESH_TOKEN",
+               "TRACKER_CONFIG", "TRACKER_ALLOWED_HOSTS")
 
 
 @pytest.fixture(autouse=True)

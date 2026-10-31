@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, api, isActive } from "../api";
 import SettingsForm from "../components/SettingsForm";
-import type { ConfigResponse, ConfigValues, FieldError, JobsResponse, Status } from "../types";
+import type { ConfigResponse, ConfigValues, FieldError, Job, JobsResponse, Status } from "../types";
 
 const SECRET_HELP: Record<string, string> = {
   CONGRESS_GOV_API_KEY: "Required to fetch House votes, bills and sponsorships.",
   ANTHROPIC_API_KEY: "Only when llm.provider is anthropic.",
   SMTP_PASSWORD: "Only when email is enabled.",
+  DROPBOX_APP_KEY: "Only for backups to Dropbox.",
+  DROPBOX_REFRESH_TOKEN: "Only for backups to Dropbox; tracker dropbox-auth prints it.",
 };
 
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : "");
@@ -27,7 +29,7 @@ export default function AdminPage() {
   const [message, setMessage] = useState<{ kind: "info" | "error"; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const loadConfig = useCallback(() => {
     api.config().then(
       (c) => {
         setConfig(c);
@@ -36,6 +38,8 @@ export default function AdminPage() {
       (e) => setMessage({ kind: "error", text: (e as Error).message }),
     );
   }, []);
+
+  useEffect(loadConfig, [loadConfig]);
 
   const dirty = !!config && !!draft && JSON.stringify(config.values) !== JSON.stringify(draft);
 
@@ -92,6 +96,7 @@ export default function AdminPage() {
       {message && <div className={`banner ${message.kind}`}>{message.text}</div>}
 
       {config && <ScheduleCard toAddr={String(config.values.email?.to_addr ?? "")} refreshKey={config} />}
+      {config && <BackupCard refreshKey={config} onRestored={loadConfig} />}
       <StatusAndJobs />
 
       {config && (
@@ -396,6 +401,143 @@ function ScheduleCard({ toAddr, refreshKey }: { toAddr: string; refreshKey: unkn
       <p className="muted small">
         Scheduled work runs only while <code>tracker serve</code> is running. A digest missed while the computer slept
         is sent when it wakes; a week is never emailed twice.
+      </p>
+    </section>
+  );
+}
+
+function BackupCard({ refreshKey, onRestored }: { refreshKey: unknown; onRestored: () => void }) {
+  const [status, setStatus] = useState<Status | null>(null);
+  const [message, setMessage] = useState<{ kind: "info" | "error"; text: string } | null>(null);
+  const [watching, setWatching] = useState<Job | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  const refresh = useCallback(() => {
+    api.status().then(setStatus, (e) => setMessage({ kind: "error", text: (e as Error).message }));
+  }, []);
+
+  useEffect(refresh, [refresh, refreshKey]); // re-read after settings are saved
+
+  // Follow a backup or restore until it finishes; a restore replaces the settings, so reload them.
+  useEffect(() => {
+    if (!watching) return;
+    const t = setInterval(async () => {
+      const job = (await api.jobs().catch(() => null))?.jobs.find((j) => j.id === watching.id);
+      if (!job || isActive(job)) return;
+      setWatching(null);
+      const what = job.kind === "restore" ? "Restore" : "Backup";
+      setMessage(
+        job.status === "ok"
+          ? { kind: "info", text: job.message ?? `${what} finished.` }
+          : { kind: "error", text: `${what} failed: ${job.message ?? job.status}` },
+      );
+      if (job.kind === "restore" && job.status === "ok") onRestored();
+      else refresh();
+    }, 1000);
+    return () => clearInterval(t);
+  }, [watching, onRestored, refresh]);
+
+  if (!status) return null;
+  const b = status.schedule.backup;
+
+  const backupNow = async () => {
+    setMessage(null);
+    try {
+      const job = await api.backupNow();
+      setWatching(job);
+      setMessage({ kind: "info", text: `${job.label}: started.` });
+    } catch (e) {
+      setMessage({ kind: "error", text: (e as Error).message });
+    }
+  };
+
+  const restore = async (file: File | undefined) => {
+    if (fileInput.current) fileInput.current.value = ""; // so choosing the same file again still fires
+    if (!file) return;
+    const ok = window.confirm(
+      `Replace ALL settings and data with the backup in ${file.name}?\n\n` +
+        "The current database is kept next to it as tracker.db.before-restore, and the current settings as " +
+        "config.toml.bak.",
+    );
+    if (!ok) return;
+    setMessage({ kind: "info", text: `Uploading ${file.name}…` });
+    try {
+      const r = await api.importBackup(file);
+      setWatching(r.job);
+      setMessage({
+        kind: "info",
+        text: `Backup from ${when(r.backup.created_at)} (${r.backup.votes} votes) checked. Restoring…`,
+      });
+    } catch (e) {
+      setMessage({ kind: "error", text: `Not restored: ${(e as Error).message}` });
+    }
+  };
+
+  return (
+    <section className="card">
+      <h2>Backup</h2>
+      {message && <div className={`banner ${message.kind}`}>{message.text}</div>}
+      <dl className="facts">
+        <dt>Daily backup</dt>
+        <dd>
+          {b.enabled ? (
+            <>
+              On, to Dropbox <span className="mono">{b.folder}</span>, keeping the newest {b.keep}. Next:{" "}
+              <strong>{b.next}</strong>
+            </>
+          ) : (
+            <>Off. Turn on Backup → Enabled below to back up to Dropbox every day.</>
+          )}
+        </dd>
+        <dt>Last backup</dt>
+        <dd>
+          {b.last_ok ? (
+            <>
+              {b.last_ok.at}: <span className="mono">{b.last_ok.path}</span>
+            </>
+          ) : (
+            "Never"
+          )}
+        </dd>
+      </dl>
+      {b.last_error && (
+        <div className="banner error">
+          The last backup attempt ({b.last_error.at}) failed: {b.last_error.message}
+        </div>
+      )}
+      {b.enabled && b.needs_credentials && (
+        <div className="banner warn">
+          DROPBOX_APP_KEY and DROPBOX_REFRESH_TOKEN must be set in the server&rsquo;s environment before backups can
+          run. <code>tracker dropbox-auth</code> prints them.
+        </div>
+      )}
+      <div className="job-actions">
+        <button
+          className="btn"
+          onClick={backupNow}
+          disabled={b.needs_credentials || !!watching}
+          title={b.needs_credentials ? "Set the Dropbox secrets first" : "Upload a backup to Dropbox now"}
+        >
+          Back up to Dropbox now
+        </button>
+        <a className="btn" href={api.backupExportUrl} download>
+          Export backup
+        </a>
+        <button className="btn" onClick={() => fileInput.current?.click()} disabled={!!watching}>
+          Import backup…
+        </button>
+        <input
+          ref={fileInput}
+          type="file"
+          accept=".zip,application/zip"
+          hidden
+          onChange={(e) => restore(e.target.files?.[0])}
+        />
+      </div>
+      <p className="muted small">
+        A backup is one zip holding every setting and all stored data; secrets are never included. Exporting takes a
+        few seconds before the download starts. Importing replaces the current settings and data, keeping this
+        machine&rsquo;s file locations, and runs after any job in progress.
       </p>
     </section>
   );
