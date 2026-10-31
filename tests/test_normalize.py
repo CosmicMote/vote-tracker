@@ -1,4 +1,5 @@
-"""Parsers tested against recorded responses only."""
+"""Parsers tested against recorded responses only: totals and caucus splits against the published
+party totals, UTC conversion, the amendment target, nominations, Guilty/Not Guilty mapping, and idempotency."""
 
 import json
 

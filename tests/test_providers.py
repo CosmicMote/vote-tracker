@@ -1,3 +1,5 @@
+"""Ollama and Anthropic request shapes, refusal handling, and switching providers through config alone."""
+
 import json
 from types import SimpleNamespace
 

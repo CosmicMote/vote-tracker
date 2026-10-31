@@ -1,4 +1,7 @@
-"""Web API tests: FastAPI TestClient against the fixture database, with a fake summary provider."""
+"""Web API tests: FastAPI TestClient against the fixture database, with a fake summary provider.
+Covers week bounds, analyze-once-until-changed, summaries filled in by the background job, members
+saved to config.toml with comments intact, per-field config validation, jobs, and the client-header
+and Host guards."""
 
 import json
 import sqlite3

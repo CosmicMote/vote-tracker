@@ -1,3 +1,5 @@
+"""SMTP delivery with STARTTLS, and a delivery failure keeping the rendered file."""
+
 import smtplib
 
 import pytest

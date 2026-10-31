@@ -1,3 +1,6 @@
+"""Bioguide->LIS resolution, independents caucusing with Democrats, a dated party switch, Speaker
+detection, unmapped LIS IDs (logged and skipped), and former senators mapped through the historical file."""
+
 import logging
 
 import pytest

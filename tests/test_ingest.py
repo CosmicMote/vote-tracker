@@ -1,3 +1,6 @@
+"""A backfill followed by a second run that fetches only the corrections window, no duplicate rows,
+one chamber failing without blocking the other, and fail-fast on an unknown member."""
+
 import json
 import re
 from datetime import UTC, date, datetime

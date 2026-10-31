@@ -1,3 +1,6 @@
+"""Writing settings back to config.toml: a no-op save leaves the file byte-identical, a change
+rewrites only its own lines, resetting to a default removes the line, and secrets are never written."""
+
 from pathlib import Path
 
 import pytest

@@ -1,3 +1,6 @@
+"""Vote classification and thresholds from real question strings in both chambers, including
+rule vs. non-rule H.Res., cloture on a nomination, and a motion to table an amendment."""
+
 import pytest
 
 from tracker.classify import classify, parse_majority_requirement, threshold

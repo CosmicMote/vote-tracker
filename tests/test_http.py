@@ -1,3 +1,6 @@
+"""The shared HTTP client: retry on 429 honoring Retry-After, backoff on 5xx, no retry on other 4xx,
+per-host throttling, paging, and API key redaction."""
+
 import httpx
 import pytest
 import respx

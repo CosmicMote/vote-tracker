@@ -1,3 +1,6 @@
+"""House rules linked to the measures they bring up (one bill, several bills, an S. bill, an H.J.Res.),
+and bill-reference parsing."""
+
 import json
 
 import pytest

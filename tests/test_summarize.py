@@ -1,3 +1,7 @@
+"""Summaries with a fake provider: valid JSON, invalid then valid, invalid twice (fallback); caching;
+prompt-version bumps; the bill-text basis; a bill voted on in both chambers summarized once;
+nominations never sent; rules summarizing their underlying bill."""
+
 import json
 from datetime import date
 

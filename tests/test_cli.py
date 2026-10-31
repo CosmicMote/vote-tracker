@@ -1,3 +1,5 @@
+"""CLI stages end to end against fixtures, and the run_log rows each command writes."""
+
 import sqlite3
 
 from typer.testing import CliRunner
