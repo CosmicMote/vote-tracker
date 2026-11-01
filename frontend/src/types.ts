@@ -118,6 +118,12 @@ export interface Legislator {
   caucus: string;
 }
 
+export interface Location {
+  state: string;
+  state_name: string;
+  district: string | null; // "0" for an at-large seat; null when the district map is not available
+}
+
 export interface MembersResponse {
   tracked: string[];
   members: Legislator[];
@@ -172,6 +178,7 @@ export interface Schedule {
     next: string;
     covers: string;
     needs_password: boolean;
+    no_members: boolean;
     problems: string[];
     last_sent: { week: string; to: string; at: string } | null;
   };

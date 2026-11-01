@@ -174,6 +174,9 @@ def digest_week(
             if not s.email.enabled:
                 log.info("email.enabled is false; not sending")
                 run["stats"]["note"] = "email disabled"
+            elif not s.members.tracked:
+                log.info("no members are tracked; not sending")
+                run["stats"]["note"] = "no members tracked"
             elif problems := email_problems(s.email):
                 note = "email settings incomplete: " + "; ".join(f"{p['loc'][-1]} {p['msg']}" for p in problems)
                 log.error("not sending: %s", note)

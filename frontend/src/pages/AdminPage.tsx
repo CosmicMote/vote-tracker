@@ -421,6 +421,14 @@ function ScheduleCard({ toAddr, refreshKey }: { toAddr: string; refreshKey: unkn
           </span>
         </div>
       )}
+      {d.email_enabled && d.no_members && (
+        <div className="banner warn">
+          <span>
+            Weekly email is on but no members are selected, so nothing is sent. Choose them on the{" "}
+            <a href="#/members">Members</a> tab.
+          </span>
+        </div>
+      )}
       {d.email_enabled && d.needs_password && (
         <div className="banner warn">
           SMTP_PASSWORD is not set in the server&rsquo;s environment, so scheduled emails will fail. Set it and restart
@@ -434,7 +442,7 @@ function ScheduleCard({ toAddr, refreshKey }: { toAddr: string; refreshKey: unkn
         <button
           className="btn"
           onClick={sendNow}
-          disabled={!d.email_enabled || d.needs_password || d.problems.length > 0}
+          disabled={!d.email_enabled || d.needs_password || d.no_members || d.problems.length > 0}
           title={d.email_enabled ? "Send now, e.g. to test your email settings" : "Enable email first"}
         >
           Send last week&rsquo;s digest now

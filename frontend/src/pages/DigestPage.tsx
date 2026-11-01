@@ -94,7 +94,14 @@ export default function DigestPage({ week }: { week?: string }) {
       {error && <div className="banner error">{error}</div>}
       {data && <SummaryStatus data={data} onRetry={onSummarize} />}
       {loading && !data && <p className="muted">Analyzing week…</p>}
-      {data && (
+      {data && data.digest.members.length === 0 && (
+        <div className="banner info">
+          <span>
+            No members are selected yet. Choose who the digest covers on the <a href="#/members">Members</a> tab.
+          </span>
+        </div>
+      )}
+      {data && data.digest.members.length > 0 && (
         <div className={loading ? "dim" : ""}>
           <DigestView key={data.week.start} digest={data.digest} />
         </div>

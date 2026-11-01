@@ -6,14 +6,16 @@ and Host guards."""
 import json
 import sqlite3
 import time
+from contextlib import closing
 from datetime import date
 
 import pytest
 from fastapi.testclient import TestClient
 
 from conftest import load_crosswalk_fixtures, load_house_fixture, load_senate_fixtures
-from tracker import analyze, db
+from tracker import analyze, db, pipeline
 from tracker.normalize.common import get_or_create_bill
+from tracker.sources import census
 from tracker.web.app import create_app
 
 HEADERS = {"X-Tracker-Client": "test"}
@@ -144,6 +146,41 @@ def test_members_saved_to_config_and_flags_updated(app_env):
     # A members change re-analyzes the next digest view.
     client.get("/api/digest/2025-11-10")
     assert len(client.get("/api/digest/2025-11-10").json()["digest"]["members"]) == 2
+
+
+def test_no_members_until_chosen(app_env):
+    client, state, cfg, tmp = app_env
+    cfg.write_text(cfg.read_text().replace('tracked = ["D000197", "B001267", "H000273"]', "tracked = []"))
+    state.reload()
+    with closing(state.conn()) as conn:
+        pipeline.apply_tracked(conn, state.settings)
+    assert client.get("/api/members").json() == {"tracked": [], "members": [], "missing": []}
+    assert client.get("/api/digest/2025-11-10").json()["digest"]["members"] == []
+    r = client.put("/api/members", json={"tracked": [" "]}, headers=HEADERS)
+    assert r.status_code == 422 and "at least one" in r.json()["detail"]
+    state.settings.email.enabled = True
+    e = state.settings.email
+    e.smtp_host, e.from_addr, e.to_addr = "smtp.mail.test", "tracker@mail.test", "jeff@mail.test"
+    state.settings.secrets.smtp_password = "pw"
+    r = client.post("/api/digest/2025-11-10/send", headers=HEADERS)
+    assert r.status_code == 409 and "No members" in r.json()["detail"]
+    assert client.get("/api/status").json()["schedule"]["digest"]["no_members"] is True
+
+
+def test_locate(app_env, monkeypatch):
+    client, *_ = app_env
+    calls = []
+
+    def fake(http, lat, lon, congress):
+        calls.append((lat, lon, congress))
+        return census.Location("CO", "Colorado", "1") if lat > 0 else None
+
+    monkeypatch.setattr(census, "locate", fake)
+    r = client.get("/api/locate", params={"lat": 39.7392, "lon": -104.9903})
+    assert r.json() == {"state": "CO", "state_name": "Colorado", "district": "1"}
+    assert calls == [(39.7392, -104.9903, 119)]
+    assert client.get("/api/locate", params={"lat": -30, "lon": -40}).status_code == 404
+    assert client.get("/api/locate", params={"lat": 91, "lon": 0}).status_code == 422
 
 
 def test_legislators_list(app_env):

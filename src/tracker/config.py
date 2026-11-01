@@ -65,8 +65,8 @@ class MembersConfig(BaseModel):
     """Who the digest covers."""
 
     tracked: list[str] = Field(
-        min_length=1,
-        description="Bioguide IDs. Chamber and LIS ID are resolved from the crosswalk.",
+        default_factory=list,
+        description="Bioguide IDs. Chamber and LIS ID are resolved from the crosswalk. Empty until chosen.",
     )
 
     @field_validator("tracked")
@@ -76,8 +76,6 @@ class MembersConfig(BaseModel):
         for b in (x.strip().upper() for x in v):
             if b and b not in out:
                 out.append(b)
-        if not out:
-            raise ValueError("at least one Bioguide ID is required")
         return out
 
 
@@ -296,7 +294,7 @@ class Secrets(BaseModel):
 
 
 class Settings(BaseModel):
-    members: MembersConfig
+    members: MembersConfig = Field(default_factory=MembersConfig)
     congress: CongressConfig = Field(default_factory=CongressConfig)
     http: HttpConfig = Field(default_factory=HttpConfig)
     senate: SenateConfig = Field(default_factory=SenateConfig)

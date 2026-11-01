@@ -5,9 +5,9 @@
 
 [members]
 # Bioguide IDs; chamber and LIS ID are resolved from the crosswalk.
-# Colorado: Rep. Diana DeGette (CO-1, replace with your own representative),
-# Sen. Michael Bennet, Sen. John Hickenlooper.
-tracked = ["D000197", "B001267", "H000273"]
+# Empty until you choose your members on the web app's Members tab, e.g.
+# tracked = ["D000197", "B001267", "H000273"]  # Rep. DeGette (CO-1), Sens. Bennet and Hickenlooper
+tracked = []
 
 [congress]
 number = 119

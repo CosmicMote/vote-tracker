@@ -1,0 +1,67 @@
+{
+    "result": {
+        "geographies": {
+            "States": [
+                {
+                    "STATENS": "01779801",
+                    "GEOID": "48",
+                    "CENTLAT": "+31.4276892",
+                    "AREAWATER": "19008164905",
+                    "STATE": "48",
+                    "BASENAME": "Texas",
+                    "STUSAB": "TX",
+                    "OID": "2749098452115",
+                    "LSADC": "00",
+                    "FUNCSTAT": "A",
+                    "INTPTLAT": "+31.4347032",
+                    "DIVISION": "7",
+                    "NAME": "Texas",
+                    "REGION": "3",
+                    "OBJECTID": 54,
+                    "CENTLON": "-099.2890539",
+                    "AREALAND": "676660157338",
+                    "INTPTLON": "-099.2818238",
+                    "MTFCC": "G4000"
+                }
+            ],
+            "119th Congressional Districts": [
+                {
+                    "GEOID": "4837",
+                    "CENTLAT": "+30.3190046",
+                    "CDSESSN": "119",
+                    "AREAWATER": "9133993",
+                    "STATE": "48",
+                    "BASENAME": "37",
+                    "OID": "2119035951825220",
+                    "LSADC": "C2",
+                    "FUNCSTAT": "N",
+                    "INTPTLAT": "+30.3005289",
+                    "NAME": "Congressional District 37",
+                    "OBJECTID": 357,
+                    "CENTLON": "-097.7881955",
+                    "AREALAND": "578851031",
+                    "INTPTLON": "-097.7743605",
+                    "MTFCC": "G5200"
+                }
+            ]
+        },
+        "input": {
+            "vintage": {
+                "isDefault": false,
+                "id": "425",
+                "vintageName": "ACS2025_Current",
+                "vintageDescription": "ACS2025 Vintage - Current Benchmark"
+            },
+            "location": {
+                "x": -97.7431,
+                "y": 30.2672
+            },
+            "benchmark": {
+                "isDefault": true,
+                "benchmarkDescription": "Public Address Ranges - Current Benchmark",
+                "id": "4",
+                "benchmarkName": "Public_AR_Current"
+            }
+        }
+    }
+}

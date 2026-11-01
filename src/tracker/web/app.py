@@ -19,7 +19,7 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -33,6 +33,8 @@ from ..config import EmailConfig, MembersConfig, Settings, email_problems, load_
 from ..config_store import save_settings
 from ..logs import configure_logging
 from ..render import DigestBuilder, fmt_date, render_digest
+from ..sources import census
+from ..sources.http import HttpClient, HttpError
 from ..sources.legislators import Crosswalk, CrosswalkError, Person
 from ..summarize import pending_summaries
 from .jobs import Job, JobRunner
@@ -420,6 +422,8 @@ def create_app(
                 f"{p['loc'][-1]} {p['msg']}" for p in problems))
         if not s.secrets.smtp_password:
             raise HTTPException(409, "SMTP_PASSWORD is not set in the server's environment.")
+        if not s.members.tracked:
+            raise HTTPException(409, "No members are selected. Choose them on the Members tab first.")
         def send(conn: sqlite3.Connection, st: Settings) -> dict:
             with state.analyze_lock:
                 pipeline.analyze_if_stale(conn, st, period)
@@ -483,6 +487,8 @@ def create_app(
             tracked = MembersConfig(tracked=body.tracked).tracked
         except ValidationError as e:
             raise HTTPException(422, validation_detail(e)) from None
+        if not tracked:
+            raise HTTPException(422, "Select at least one member.")
         with closing(state.conn()) as conn:
             xw = state.current_crosswalk(conn)
             try:
@@ -496,6 +502,21 @@ def create_app(
         with closing(state.conn()) as conn:
             payload = members_payload(state.settings, conn)
         return {**payload, "job": job.as_dict() if job else None}
+
+    @app.get("/api/locate")
+    def locate(lat: float = Query(ge=-90, le=90), lon: float = Query(ge=-180, le=180)) -> dict:
+        """The state and congressional district at the browser's location, from the Census geocoder."""
+        s = state.settings
+        http = HttpClient(s.http.user_agent, s.http.min_interval_seconds, s.http.timeout_seconds, s.http.max_attempts)
+        try:
+            loc = census.locate(http, lat, lon, s.congress.number)
+        except HttpError as e:
+            raise HTTPException(502, f"The Census geocoder did not answer: {e}") from None
+        finally:
+            http.close()
+        if loc is None:
+            raise HTTPException(404, "That location is not in a US state or territory.")
+        return {"state": loc.state, "state_name": loc.state_name, "district": loc.district}
 
     # --- config ---------------------------------------------------------------
 

@@ -554,6 +554,13 @@ code,
   gap: 0.3rem;
   flex-shrink: 0;
 }
+.locate {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
 .filters {
   display: grid;
   grid-template-columns: auto 1fr;

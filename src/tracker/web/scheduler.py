@@ -10,9 +10,9 @@ Only the most recent slot is ever caught up.
 The backup runs only when it is enabled and the Dropbox secrets are set. Unlike the email,
 enabling it backs up for the latest slot straight away, which doubles as a test of the setup.
 
-The digest email goes out only when email is enabled. Enabling email never sends for a slot
-that has already passed: the first email goes out at the next slot. A week already emailed
-(by the schedule, the Admin button or `tracker run-weekly`) is not sent again.
+The digest email goes out only when email is enabled and members are chosen. Enabling email
+never sends for a slot that has already passed: the first email goes out at the next slot. A
+week already emailed (by the schedule, the Admin button or `tracker run-weekly`) is not sent again.
 """
 
 from __future__ import annotations
@@ -141,7 +141,7 @@ class Scheduler:
         slot = _utc(slot_local)
         if slot < since or _cursor(conn, DIGEST_KEY) == slot:
             return False
-        if email_problems(s.email):
+        if email_problems(s.email) or not s.members.tracked:
             return False  # not ready; the Admin tab says why, and the slot is tried again once fixed
         period = digest_period(slot_local, s.digest.timezone)
         db.set_sync(conn, DIGEST_KEY, slot)
@@ -208,6 +208,7 @@ class Scheduler:
                 "next": fmt(nxt_digest),
                 "covers": fmt_date(digest_period(nxt_digest, s.digest.timezone).start),
                 "needs_password": not s.secrets.smtp_password,
+                "no_members": not s.members.tracked,
                 "problems": [f"{p['loc'][-1]}: {p['msg']}" for p in email_problems(s.email)],
                 "last_sent": last_sent,
             },

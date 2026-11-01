@@ -33,7 +33,7 @@ or produce a digest from the command line with `uv run tracker run-weekly`, whic
 
 Secrets are read from the environment at startup and are never shown in the UI or written to `config.toml`.
 
-`config.example.toml` tracks Colorado's delegation: Sen. Michael Bennet (`B001267`), Sen. John Hickenlooper (`H000273`), and Rep. Diana DeGette (`D000197`, CO-1) as a stand-in representative. Bioguide IDs are at <https://bioguide.congress.gov> or in the URL of a member's Congress.gov page.
+`config.example.toml` tracks no one (`tracked = []`). Choose members on the Members tab, or list Bioguide IDs in `config.toml`, e.g. Colorado's `["D000197", "B001267", "H000273"]` (Rep. DeGette, CO-1, and Sens. Bennet and Hickenlooper). Bioguide IDs are at <https://bioguide.congress.gov> or in the URL of a member's Congress.gov page. Until members are chosen, the digest is empty and no email is sent: the scheduler holds the weekly slot, and the send endpoint answers 409.
 
 **UI development.** Run `uv run tracker serve` and `npm --prefix frontend run dev` together: Vite serves the UI on `:5173` and proxies `/api` to the server on `:8000`.
 
@@ -83,6 +83,7 @@ A FastAPI JSON API plus a React single-page app, on top of the same pipeline cod
 - Opening a week runs analyze only when its inputs changed. `sync_state` holds `data_version`, bumped by ingest/normalize, and `analyzed:<week>`, a signature of the data version, tracked members and scoring settings.
 - `src/tracker/config_store.py` writes settings back with `tomlkit`. Only lines whose values changed are rewritten, so comments and layout survive, and the previous file is kept as `config.toml.bak`.
 - The settings form is generated from the pydantic models' JSON Schema. Two kinds of validation apply: **startup rules** (types, ranges, `HH:MM` times, the time zone, `http(s)` URLs), which the program can't run without, and **readiness rules** for email (a real SMTP host and addresses). Readiness rules block saving and sending, but only log a warning when a config file loads, so a half-finished `[email]` section never locks you out.
+- **Finding your members.** The Members tab's "Use my location" button asks the browser for its position (only offered on secure pages: https, or http on localhost) and passes it to `/api/locate`. `sources/census.py` asks the US Census Bureau geocoder for the state and district, rounded to 4 decimal places, and nothing is stored. Each geocoder vintage carries one Congress's district map, and the "Current" vintage moves to the next Congress before it is seated (states redistrict mid-decade too), so vintages are tried until one has `congress.number`'s map. At-large seats and delegates come back as district `0`, as in the crosswalk. With nothing selected, the page fills in the state's senators (first, for delegation splits) and that district's representative, unsaved. On a first visit it locates automatically only if the browser already allows location, so the permission prompt appears only on a click.
 - The frontend lives in `frontend/` (Vite + React + TypeScript, no other runtime dependencies) and uses only relative URLs, so the same build works under any `API_PATH`.
 
 **API.** Interactive docs are at `/docs`.
@@ -93,7 +94,8 @@ A FastAPI JSON API plus a React single-page app, on top of the same pipeline cod
 | `GET /api/digest/{week}` | Analyze if stale, then return the digest as JSON, with summary progress |
 | `GET /api/digest/{week}/email` | The email HTML for that week |
 | `POST /api/digest/{week}/summarize`, `POST /api/digest/{week}/send` | Background jobs (send records the week as sent) |
-| `GET /api/legislators`, `GET` and `PUT /api/members` | Current members of Congress; the tracked selection |
+| `GET /api/legislators`, `GET` and `PUT /api/members` | Current members of Congress; the tracked selection (`PUT` needs at least one) |
+| `GET /api/locate?lat=&lon=` | State and congressional district at a point, from the Census geocoder (404 outside the US) |
 | `GET` and `PUT /api/config`, `POST /api/config/validate` | All settings, their JSON Schema, and which secrets are set; check settings without saving |
 | `GET` and `POST /api/jobs`, `GET /api/status` | Jobs and run history; data status |
 | `GET /api/backup/export` | Download a backup zip |
@@ -338,6 +340,7 @@ Parsers are tested only against recorded responses in `tests/fixtures/`:
 
 - `congress_gov/` and `legislators/`: recorded from the live Congress.gov API (key removed) and the congress-legislators files, trimmed.
 - `senate/`: senate.gov vote XML, transcribed from a browser session because scripts are blocked; see [tests/fixtures/senate/README.md](tests/fixtures/senate/README.md).
+- `census/`: recorded Census geocoder responses for downtown Austin (TX-37 in the 119th Congress, TX-10 in the 120th) and a point in the Atlantic.
 - `voteview/`: recorded Voteview CSVs, cut down to eight roll calls; see the README there.
 - `congress_gov/unverified/`: **not recorded.** Shape-only fixtures with invented values, for endpoints the shared `DEMO_KEY` ran out before reaching. Replace them with recorded responses when you have a key; see the README there.
 
@@ -389,6 +392,7 @@ src/tracker/
     senate_xml.py         senate.gov vote menu and vote XML
     voteview.py           Voteview Senate CSV downloads
     legislators.py        congress-legislators crosswalk (current + former members)
+    census.py             Census geocoder: state and congressional district at a point
   ingest.py               stage 1
   normalize/
     __init__.py           stage 2 runner

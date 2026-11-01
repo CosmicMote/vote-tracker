@@ -68,8 +68,11 @@ def test_secrets_never_written(cfg, monkeypatch):
 def test_invalid_values_rejected_before_saving():
     with pytest.raises(ValidationError):
         Settings.model_validate({"members": {"tracked": ["X"]}, "digest": {"timezone": "Mars/Olympus"}})
-    with pytest.raises(ValidationError):
-        Settings.model_validate({"members": {"tracked": [" "]}})
+
+
+def test_members_may_be_empty_until_chosen():
+    assert Settings.model_validate({}).members.tracked == []
+    assert Settings.model_validate({"members": {"tracked": [" ", "d000197", "D000197"]}}).members.tracked == ["D000197"]
 
 
 # --- validation rules -------------------------------------------------------------------

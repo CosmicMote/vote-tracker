@@ -7,6 +7,7 @@ import type {
   Job,
   JobsResponse,
   Legislator,
+  Location,
   MembersResponse,
   Status,
   WeeksResponse,
@@ -61,6 +62,7 @@ export const api = {
   legislators: () => request<{ legislators: Legislator[] }>("GET", "api/legislators"),
   members: () => request<MembersResponse>("GET", "api/members"),
   saveMembers: (tracked: string[]) => request<MembersResponse>("PUT", "api/members", { tracked }),
+  locate: (lat: number, lon: number) => request<Location>("GET", `api/locate?lat=${lat}&lon=${lon}`),
   config: () => request<ConfigResponse>("GET", "api/config"),
   saveConfig: (values: ConfigValues) => request<ConfigResponse>("PUT", "api/config", { values }),
   validateConfig: (values: ConfigValues) =>

@@ -57,14 +57,14 @@ Open <http://127.0.0.1:8000/>.
 
 ### 3. Set it up
 
-On first start the app has no data and tracks Colorado's delegation as an example. Do these once, in order:
+On first start the app has no data and no members selected. Do these once, in order:
 
 1. **Identify yourself to the data sources.** Admin → Settings → HTTP → User agent: replace `you@example.com` with your own contact address. It is sent with every request, so the data providers can reach you if something goes wrong.
 2. **Point it at a summarizer.** Admin → Settings → Summaries (LLM):
    - **Ollama on the host:** set Base url to `http://host.docker.internal:11434`. Inside the container, `localhost` is the container itself. This works out of the box with Docker Desktop on macOS and Windows; on Linux, also add `--add-host=host.docker.internal:host-gateway` to `docker run`.
    - **Claude:** set Provider to `anthropic` and Model to `claude-opus-5-5`, and make sure the container was started with `ANTHROPIC_API_KEY`.
 3. **Load the member list.** Admin → Data → **Fetch member list**. (When the container starts with an API key it also runs a data update on its own, which loads the list too; the Data card shows what is running.)
-4. **Choose your members.** On the Members tab, pick your state, then your representative and two senators, and save. The order matters in one place: delegation splits compare the first two senators.
+4. **Choose your members.** On the Members tab, click **Use my location** to select your two senators and the representative for your congressional district (your browser asks permission; the location goes to the US Census Bureau's geocoder and isn't stored). Or pick your state, then your representative and two senators. Check the selection and save. The order matters in one place: delegation splits compare the first two senators.
 5. **Load the votes.** Admin → Data → **Backfill from date**, with `2025-01-03` (the start of the 119th Congress). This makes a few thousand Congress.gov requests at one per second, so it takes about an hour. Jobs run one at a time; browsing works meanwhile.
 6. **Turn on the weekly email (optional).** Follow [Sending the digest from a Gmail account](#sending-the-digest-from-a-gmail-account), then use "Send last week's digest now" on the Admin tab to test it.
 7. **Turn on daily backups (optional).** Follow [Backing up to Dropbox](#backing-up-to-dropbox).

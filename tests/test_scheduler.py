@@ -177,3 +177,15 @@ def test_incomplete_email_settings_hold_the_send_until_fixed(sched):
     state.settings.email.smtp_host = "smtp.mail.test"
     clock.now = at(2026, 10, 31, 9, 0)
     assert scheduler.tick() == ["weekly"]  # fixed the same morning: the slot goes out
+
+
+def test_no_members_hold_the_send_until_chosen(sched):
+    scheduler, clock, state, sent = sched
+    enable_email(state)
+    scheduler.tick()  # Wednesday: enabled
+    tracked, state.settings.members.tracked = state.settings.members.tracked, []
+    clock.now = at(2026, 10, 31, 7, 35)
+    assert scheduler.tick() == []  # nobody to report on: nothing sent, slot not used up
+    state.settings.members.tracked = tracked
+    clock.now = at(2026, 10, 31, 9, 0)
+    assert scheduler.tick() == ["weekly"]
