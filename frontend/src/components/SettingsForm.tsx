@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ConfigValues, FieldError, JsonSchema } from "../types";
+import Panel from "./Panel";
 
 // Renders every config.toml setting from the pydantic JSON Schema the server sends.
 
@@ -14,8 +15,11 @@ const nullable = (s: JsonSchema) => s.anyOf?.some((x) => x.type === "null") ?? f
 const baseType = (s: JsonSchema) => s.type ?? s.anyOf?.find((x) => x.type !== "null")?.type;
 const humanize = (key: string) => key.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
 
+// Not shown here: secrets come from the environment, and members are chosen on the Members tab.
+const HIDDEN_SECTIONS = new Set(["secrets", "members"]);
+const COLLAPSED_SECTIONS = new Set(["scoring", "storage"]);
+
 const SECTION_TITLES: Record<string, string> = {
-  members: "Members",
   congress: "Congress",
   http: "HTTP",
   senate: "Senate votes",
@@ -155,7 +159,7 @@ interface Props {
 }
 
 export default function SettingsForm({ schema, values, errors, onChange }: Props) {
-  const sections = Object.entries(schema.properties ?? {}).filter(([k]) => k !== "secrets");
+  const sections = Object.entries(schema.properties ?? {}).filter(([k]) => !HIDDEN_SECTIONS.has(k));
   const errorFor = (section: string, key: string) =>
     errors
       .filter((e) => e.loc[0] === section && e.loc[1] === key)
@@ -165,13 +169,20 @@ export default function SettingsForm({ schema, values, errors, onChange }: Props
     <div className="settings">
       {sections.map(([section, raw]) => {
         const s = resolve(raw, schema);
+        const problems = errors.filter((e) => e.loc[0] === section).length;
         return (
-          <fieldset className="card settings-section" key={section} data-section={section}>
-            <legend>
-              <h2>
+          <Panel
+            className="settings-section"
+            key={section}
+            data-section={section}
+            defaultOpen={!COLLAPSED_SECTIONS.has(section)}
+            title={
+              <>
                 {SECTION_TITLES[section] ?? humanize(section)} <span className="mono muted small">[{section}]</span>
-              </h2>
-            </legend>
+              </>
+            }
+            badge={problems > 0 && <span className="pill failed">{problems} to fix</span>}
+          >
             {s.description && <p className="muted">{s.description}</p>}
             <div className="fields">
               {Object.entries(s.properties ?? {}).map(([key, fs]) => (
@@ -185,7 +196,7 @@ export default function SettingsForm({ schema, values, errors, onChange }: Props
                 />
               ))}
             </div>
-          </fieldset>
+          </Panel>
         );
       })}
     </div>

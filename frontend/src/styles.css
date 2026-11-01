@@ -612,16 +612,36 @@ code,
 .sticky-actions .muted {
   margin-right: auto;
 }
-.settings-section {
-  margin: 0 0 1rem;
+.panel > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  list-style: none;
 }
-.settings-section legend {
-  padding: 0;
-  float: left;
-  width: 100%;
+.panel > summary::-webkit-details-marker {
+  display: none;
+}
+.panel > summary::before {
+  content: "";
+  flex: none;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(-45deg);
+  transition: transform 0.15s;
+}
+.panel[open] > summary::before {
+  transform: rotate(45deg);
+}
+.panel > summary h2 {
+  margin: 0;
+}
+.panel[open] > summary {
+  margin-bottom: 0.75rem;
 }
 .fields {
-  clear: both;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1rem 1.25rem;

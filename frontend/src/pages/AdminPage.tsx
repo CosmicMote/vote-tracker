@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, api, isActive } from "../api";
+import Panel from "../components/Panel";
 import SettingsForm from "../components/SettingsForm";
 import type { ConfigResponse, ConfigValues, FieldError, Job, JobsResponse, Status } from "../types";
 
@@ -59,10 +60,15 @@ export default function AdminPage() {
     };
   }, [draft]);
 
+  // Members are edited on their own tab, so the settings form has no field to jump to for these.
+  const memberErrors = errors.filter((e) => e.loc[0] === "members");
+
   const jumpToFirstError = () => {
     const e = errors[0];
     if (!e) return;
-    const el = document.querySelector(`[data-section="${e.loc[0]}"] [data-field="${e.loc[1]}"]`);
+    const section = document.querySelector<HTMLDetailsElement>(`details[data-section="${e.loc[0]}"]`);
+    if (section) section.open = true;
+    const el = section?.querySelector(`[data-field="${e.loc[1]}"]`);
     el?.scrollIntoView({ behavior: "smooth", block: "center" });
     el?.querySelector<HTMLElement>("input, select")?.focus({ preventScroll: true });
   };
@@ -100,8 +106,7 @@ export default function AdminPage() {
       <StatusAndJobs />
 
       {config && (
-        <section className="card">
-          <h2>Secrets</h2>
+        <Panel title="Secrets">
           <p className="muted">
             Read from the server&rsquo;s environment when <code>tracker serve</code> starts; never stored in
             config.toml or shown here. Set them in the shell that runs the server, then restart it.
@@ -114,11 +119,17 @@ export default function AdminPage() {
               </li>
             ))}
           </ul>
-        </section>
+        </Panel>
       )}
 
       {config && draft && (
         <>
+          {memberErrors.length > 0 && (
+            <div className="banner error">
+              Tracked members: {memberErrors.map((e) => e.msg).join("; ")}. Fix them on the{" "}
+              <a href="#/members">Members</a> tab.
+            </div>
+          )}
           <div className="sticky-actions">
             {errors.length > 0 ? (
               <button className="link-button error-text" onClick={jumpToFirstError}>
@@ -187,8 +198,7 @@ function StatusAndJobs() {
   };
 
   return (
-    <section className="card">
-      <h2>Data</h2>
+    <Panel title="Data">
       {error && <div className="banner error">{error}</div>}
       {status && (
         <>
@@ -314,7 +324,7 @@ function StatusAndJobs() {
           </table>
         </details>
       )}
-    </section>
+    </Panel>
   );
 }
 
@@ -342,8 +352,7 @@ function ScheduleCard({ toAddr, refreshKey }: { toAddr: string; refreshKey: unkn
   };
 
   return (
-    <section className="card">
-      <h2>Schedule &amp; email</h2>
+    <Panel title="Schedule & email">
       {message && <div className={`banner ${message.kind}`}>{message.text}</div>}
       {!schedule.running && <div className="banner warn">The scheduler is not running in this process.</div>}
       <dl className="facts">
@@ -402,7 +411,7 @@ function ScheduleCard({ toAddr, refreshKey }: { toAddr: string; refreshKey: unkn
         Scheduled work runs only while <code>tracker serve</code> is running. A digest missed while the computer slept
         is sent when it wakes; a week is never emailed twice.
       </p>
-    </section>
+    </Panel>
   );
 }
 
@@ -479,8 +488,7 @@ function BackupCard({ refreshKey, onRestored }: { refreshKey: unknown; onRestore
   };
 
   return (
-    <section className="card">
-      <h2>Backup</h2>
+    <Panel title="Backup">
       {message && <div className={`banner ${message.kind}`}>{message.text}</div>}
       <dl className="facts">
         <dt>Daily backup</dt>
@@ -544,6 +552,6 @@ function BackupCard({ refreshKey, onRestored }: { refreshKey: unknown; onRestore
         few seconds before the download starts. Importing replaces the current settings and data, keeping this
         machine&rsquo;s file locations, and runs after any job in progress.
       </p>
-    </section>
+    </Panel>
   );
 }
