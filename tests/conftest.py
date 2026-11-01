@@ -46,8 +46,8 @@ def settings(tmp_path: Path) -> Settings:
         members=MembersConfig(tracked=TRACKED),
         senate=SenateConfig(source="senate_gov"),  # most tests use the senate.gov XML fixtures
         llm=LlmConfig(provider="ollama", model="test-model", prompt_version="v1"),
-        digest=DigestConfig(output_dir=tmp_path / "digests", timezone="America/Denver"),
-        storage=StorageConfig(db_path=tmp_path / "t.db", log_dir=tmp_path / "logs"),
+        digest=DigestConfig(timezone="America/Denver"),
+        storage=StorageConfig(db_path=tmp_path / "t.db", log_dir=tmp_path / "logs", output_dir=tmp_path / "digests"),
     )
 
 

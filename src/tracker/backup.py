@@ -24,7 +24,7 @@ import tomlkit
 from pydantic import ValidationError
 
 from . import db
-from .config import Settings
+from .config import Settings, migrate_config
 from .config_store import write_config_text
 from .dropbox import Dropbox, DropboxError
 
@@ -34,7 +34,7 @@ FORMAT = "vote-tracker-backup"
 VERSION = 1
 NAME_RE = re.compile(r"^tracker-backup-\d{8}T\d{6}Z\.zip$")
 # Machine-specific paths: a restore keeps the current config's values for these.
-LOCAL_KEYS = (("storage", "db_path"), ("storage", "log_dir"), ("digest", "output_dir"))
+LOCAL_KEYS = (("storage", "db_path"), ("storage", "log_dir"), ("storage", "output_dir"))
 LAST_OK_KEY = "backup:last_ok"  # cursor: Dropbox path of the last successful backup
 LAST_ERROR_KEY = "backup:last_error"  # cursor: why the last attempt failed; removed on success
 
@@ -99,6 +99,8 @@ def keep_local_paths(backup_text: str, current_text: str) -> str:
     """The backed-up config.toml, comments intact, with LOCAL_KEYS taken from the current one."""
     doc = tomlkit.parse(backup_text)
     current = tomllib.loads(current_text)
+    migrate_config(doc)
+    migrate_config(current)
     for section, key in LOCAL_KEYS:
         value = current.get(section, {}).get(key)
         table = doc.get(section)

@@ -10,7 +10,7 @@ from typing import Any
 import tomlkit
 from tomlkit.items import Table
 
-from .config import DEFAULT_BASE_WEIGHTS, Settings
+from .config import DEFAULT_BASE_WEIGHTS, Settings, migrate_config
 
 # Fields whose value is a free-form mapping: replaced wholesale, so removed keys disappear.
 MAPPING_FIELDS = {("scoring", "base_weights"), ("scoring", "topic_boost")}
@@ -69,6 +69,7 @@ def save_settings(path: Path, settings: Settings) -> None:
     comments and keys the tracker does not know about are left exactly as they were."""
     if path.exists():
         doc = tomlkit.parse(path.read_text(encoding="utf-8"))
+        migrate_config(doc)
         old = settings_to_data(Settings.model_validate({k: v for k, v in doc.unwrap().items() if k != "secrets"}))
     else:
         doc, old = tomlkit.document(), {}

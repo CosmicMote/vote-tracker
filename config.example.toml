@@ -36,7 +36,6 @@ fallbacks = "default"          # anthropic only: server-side refusal fallback; "
 [digest]
 top_n = 10                     # scored votes per member, in addition to all party breaks
 missed_vote_min_score = 1.0    # missed votes at or above this are listed individually
-output_dir = "./digests"
 timezone = "America/Denver"
 
 [email]
@@ -64,6 +63,7 @@ keep = 14                          # older backups in the folder are deleted
 [storage]
 db_path = "./tracker.db"
 log_dir = "./logs"
+output_dir = "./digests"       # where digest HTML files are written
 crosswalk_max_age_days = 7     # refresh congress-legislators weekly
 corrections_window_days = 14   # re-fetch votes this recent to pick up corrections
 # crosswalk_historical_url = ""  # disable mapping of former members (not recommended)

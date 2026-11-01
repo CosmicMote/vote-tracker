@@ -360,7 +360,7 @@ def render_digest(conn: sqlite3.Connection, settings: Settings, period: Period) 
 
 
 def digest_path(settings: Settings, period: Period) -> Path:
-    return settings.digest.output_dir / f"{period.start.isoformat()}.html"
+    return settings.storage.output_dir / f"{period.start.isoformat()}.html"
 
 
 def write_digest(conn: sqlite3.Connection, settings: Settings, period: Period) -> tuple[str, Path]:

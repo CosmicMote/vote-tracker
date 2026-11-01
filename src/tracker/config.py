@@ -6,8 +6,9 @@ import logging
 import os
 import re
 import tomllib
+from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import AfterValidator, BaseModel, Field, field_validator
@@ -131,7 +132,6 @@ class DigestConfig(BaseModel):
 
     top_n: int = Field(10, ge=1, description="Scored votes per member, in addition to all party breaks.")
     missed_vote_min_score: float = Field(1.0, ge=0, description="Missed votes at or above this are listed individually.")
-    output_dir: Path = Field(Path("./digests"), description="Where digest HTML files are written.")
     timezone: str = Field("America/Denver", description="IANA time zone for weeks and displayed times.")
 
     @field_validator("timezone")
@@ -259,6 +259,7 @@ class StorageConfig(BaseModel):
 
     db_path: Path = Field(Path("./tracker.db"), description="SQLite database file.")
     log_dir: Path = Field(Path("./logs"), description="Directory for tracker.log.")
+    output_dir: Path = Field(Path("./digests"), description="Where digest HTML files are written.")
     crosswalk_url: Url = Field(
         "https://unitedstates.github.io/congress-legislators/legislators-current.json",
         description="congress-legislators current members (JSON).",
@@ -345,6 +346,15 @@ def email_problems(email: EmailConfig) -> list[dict]:
     return out
 
 
+def migrate_config(data: MutableMapping[str, Any]) -> None:
+    """Move settings from where older config files kept them, in place. Works on a plain dict and
+    on a tomlkit document. [digest] output_dir moved to [storage] output_dir."""
+    digest = data.get("digest")
+    if isinstance(digest, MutableMapping) and "output_dir" in digest:
+        value = digest.pop("output_dir")
+        data.setdefault("storage", {}).setdefault("output_dir", value)
+
+
 def load_settings(path: Path | None = None) -> Settings:
     path = path or Path(os.environ.get("TRACKER_CONFIG", DEFAULT_CONFIG_PATH))
     if not path.exists():
@@ -354,6 +364,7 @@ def load_settings(path: Path | None = None) -> Settings:
     with path.open("rb") as f:
         data = tomllib.load(f)
     data.pop("secrets", None)  # secrets come only from the environment
+    migrate_config(data)
     settings = Settings.model_validate(data)
     settings.secrets = Secrets.from_env()
     for p in email_problems(settings.email):

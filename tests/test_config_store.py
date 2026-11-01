@@ -57,6 +57,18 @@ def test_resetting_to_defaults_and_null_removes_lines(cfg):
     assert "\ncloture = " not in text and "\nsmtp_user = " not in text
 
 
+def test_legacy_digest_output_dir_moves_to_storage(tmp_path):
+    p = tmp_path / "config.toml"
+    p.write_text('[digest]\ntop_n = 3\noutput_dir = "./old"\n\n[storage]\ndb_path = "./tracker.db"\n')
+    s = load_settings(p)
+    assert s.storage.output_dir == Path("./old")
+    s.digest.top_n = 4
+    save_settings(p, s)  # any save moves the key
+    text = p.read_text()
+    assert text.count("output_dir") == 1 and text.index("output_dir") > text.index("[storage]")
+    assert load_settings(p).storage.output_dir == Path("./old")
+
+
 def test_secrets_never_written(cfg, monkeypatch):
     monkeypatch.setenv("SMTP_PASSWORD", "hunter2")
     s = load_settings(cfg)

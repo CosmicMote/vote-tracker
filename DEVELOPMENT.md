@@ -317,11 +317,11 @@ Everything lives in `config.toml`; see [config.example.toml](config.example.toml
 | `[http]` | `user_agent` (include a contact address), `min_interval_seconds`, `timeout_seconds`, `max_attempts` |
 | `[senate]` | `source` (`voteview` or `senate_gov`), `voteview_url` |
 | `[llm]` | `provider`, `model`, `base_url`, `max_input_chars`, `prompt_version`, `effort`, `fallbacks` |
-| `[digest]` | `top_n`, `missed_vote_min_score`, `output_dir`, `timezone` |
+| `[digest]` | `top_n`, `missed_vote_min_score`, `timezone` |
 | `[email]` | `enabled` (turns on the weekly email), `smtp_host`, `smtp_port`, `smtp_user`, `from_addr`, `to_addr` |
 | `[schedule]` | `update_daily_at`, `digest_weekday`, `digest_at` (used by `tracker serve`) |
 | `[backup]` | `enabled`, `daily_at`, `dropbox_folder`, `keep` (used by `tracker serve`) |
-| `[storage]` | `db_path`, `log_dir`, `crosswalk_url`, `crosswalk_historical_url`, `crosswalk_max_age_days`, `corrections_window_days` |
+| `[storage]` | `db_path`, `log_dir`, `output_dir`, `crosswalk_url`, `crosswalk_historical_url`, `crosswalk_max_age_days`, `corrections_window_days` |
 | `[scoring]` | `party_break_bonus`, `sponsor_bonus`, `tie_breaker_bonus`, `break_min_cohesion`, `break_min_caucus_size`, `lopsided_share`, `contested_cohesion`, `[scoring.base_weights]`, `[scoring.topic_boost]` |
 
 Every weight and threshold in the scoring section is a configurable default, not a constant in code.

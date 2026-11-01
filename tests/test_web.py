@@ -29,12 +29,12 @@ source = "senate_gov"
 
 [digest]
 top_n = 10                     # scored votes per member
-output_dir = "{tmp}/digests"
 timezone = "America/Denver"
 
 [storage]
 db_path = "{tmp}/tracker.db"
 log_dir = "{tmp}/logs"
+output_dir = "{tmp}/digests"
 """
 
 
