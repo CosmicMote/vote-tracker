@@ -20,8 +20,9 @@
   color-scheme: light;
 }
 
+/* Dark follows the system unless the viewer picked a theme on the Admin tab (data-theme on <html>). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0f1115;
     --surface: #171a21;
     --surface-2: #1d2129;
@@ -41,6 +42,27 @@
     --shadow: none;
     color-scheme: dark;
   }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f1115;
+  --surface: #171a21;
+  --surface-2: #1d2129;
+  --text: #e8eaee;
+  --muted: #9aa3af;
+  --border: #2a2f39;
+  --accent: #7aa2ff;
+  --accent-text: #0f1115;
+  --accent-soft: #1d2840;
+  --ok: #4ade80;
+  --ok-soft: #132a1c;
+  --warn: #f5c46b;
+  --warn-soft: #2a2213;
+  --warn-border: #6b5220;
+  --error: #ff8a80;
+  --error-soft: #2c1615;
+  --shadow: none;
+  color-scheme: dark;
 }
 
 * {

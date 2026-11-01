@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, api, isActive } from "../api";
 import Panel from "../components/Panel";
 import SettingsForm from "../components/SettingsForm";
+import { type Theme, getTheme, setTheme } from "../theme";
 import type { ConfigResponse, ConfigValues, FieldError, Job, JobsResponse, Status } from "../types";
 
 const SECRET_HELP: Record<string, string> = {
@@ -104,6 +105,7 @@ export default function AdminPage() {
       {config && <ScheduleCard toAddr={String(config.values.email?.to_addr ?? "")} refreshKey={config} />}
       {config && <BackupCard refreshKey={config} onRestored={loadConfig} />}
       <StatusAndJobs />
+      <AppearanceCard />
 
       {config && (
         <Panel title="Secrets">
@@ -149,6 +151,37 @@ export default function AdminPage() {
         </>
       )}
     </div>
+  );
+}
+
+const THEMES: { value: Theme; label: string }[] = [
+  { value: "system", label: "Match system" },
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+];
+
+function AppearanceCard() {
+  const [theme, setThemeState] = useState(getTheme);
+  return (
+    <Panel title="Appearance">
+      <div className="job-actions" role="radiogroup" aria-label="Theme">
+        {THEMES.map((t) => (
+          <label className="check" key={t.value}>
+            <input
+              type="radio"
+              name="theme"
+              checked={theme === t.value}
+              onChange={() => {
+                setTheme(t.value);
+                setThemeState(t.value);
+              }}
+            />{" "}
+            {t.label}
+          </label>
+        ))}
+      </div>
+      <p className="muted small">Remembered in this browser only; not part of config.toml or backups.</p>
+    </Panel>
   );
 }
 
